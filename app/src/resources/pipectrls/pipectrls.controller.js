@@ -301,22 +301,33 @@ const estimatedPipingWeight = async(req, res) =>{ //Select del peso de las linea
             }
             //Cogemos el peso actual de las lineas modeladas
             sql.query("SELECT stage1 as weight, valves, instruments FROM pipectrls LEFT JOIN pestpipes ON status_id = pestpipes.id", (err, results) =>{
-                let weight = 0
+				let weight = 0
                 if(results[0]){
+                    
                     for(let i = 0; i < results.length; i++){ 
                         weight += results[i].weight
                         if(results[i].valves || results[i].instruments){
                             weight += 1
                         }
                     }
+                    
+                    
                 }
-                sql.query("SELECT COUNT(*) as estimated FROM iquoxe_db.estimated_pipes_view WHERE status = ?", ["ESTIMATED"], (err, results) =>{
-                    if(results[0]){
-                        weight += results[0].estimated
-                    }
-                    progress = (weight/modelled_weight*100).toFixed(2)
-                    res.send({weight: estimated_weight, modelledWeight: modelled_weight, progress: progress}).status(200)
-                })
+				sql.query("SELECT diameter, calc_notes FROM estimated_pipes_view LEFT JOIN `lines` ON estimated_pipes_view.line_reference = `lines`.tag WHERE status COLLATE utf8mb4_unicode_ci = ?", ["ESTIMATED"], (err, results) =>{
+                        if(results[0]){
+                            for(let i = 0; i < results.length; i++){
+								if(results[i].calc_notes != "unset" && results[i].calc_notes != "" && results[i].calc_notes){
+									weight += 1
+								}else if(results[i].diameter < 2){
+									weight += 0.5
+								}else{
+									weight += 0.3
+								}
+							}
+                        }
+                        progress = (weight/estimated_weight*100).toFixed(2)
+                        res.send({weight: estimated_weight, modelledWeight: modelled_weight, progress: progress}).status(200)
+                    })
                 
             })
         })
