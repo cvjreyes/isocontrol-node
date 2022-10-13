@@ -309,9 +309,16 @@ const estimatedPipingWeight = async(req, res) =>{ //Select del peso de las linea
                             weight += 1
                         }
                     }
-                    progress = (weight/modelled_weight*100).toFixed(2)
+                    sql.query("SELECT COUNT(*) as estimated FROM iquoxe_db.estimated_pipes_view WHERE status = ?", ["ESTIMATED"], (err, results) =>{
+                        if(results[0]){
+                            weight += results[0].estimated
+                        }
+                        progress = (weight/modelled_weight*100).toFixed(2)
+                        res.send({weight: estimated_weight, modelledWeight: modelled_weight, progress: progress}).status(200)
+                    })
+                    
                 }
-                res.send({weight: estimated_weight, modelledWeight: modelled_weight, progress: progress}).status(200)
+                
             })
         })
     })

@@ -5520,6 +5520,96 @@ const submitFeedForecast = async(req, res) =>{ //Se guarda el progreso del feed
   res.send({success:true}).status(200)
 }
 
+cron.schedule('0 */30 * * * *', () => {
+  if(process.env.NODE_CRON == "1"){
+    downloadStatusFeed()
+    downloadStatusIFD()
+  }
+  
+})
+
+function downloadStatusFeed(){
+  sql.query("SELECT * FROM feed_pipes_view", (err, results)=>{
+    if(!results[0]){
+      res.status(200)
+    }else{
+      let log = []
+      let lines = []
+      let status = ""
+      log.push("ONERROR CONTINUE")
+      
+      for(let i = 0; i < results.length;i++){
+        let tag_order = process.env.NODE_TAG_ORDER.split(/[ -]+/)   
+        let tag = results[i][tag_order[0]] + "-" + results[i][tag_order[1]] + "-" + results[i][tag_order[2]] + "-" + results[i][tag_order[3]] + "-" + results[i][tag_order[4]] + "-" + results[i][tag_order[5]] + "-" + results[i][tag_order[6]] + "_" + results[i][tag_order[7]]  
+        log.push("/Cpipes")
+        let pipe = "New :Cpipes /" + tag + " :DiametersRefFromCpipes /" + results[i].line_reference + "_" + results[i].diameter + " :720001MTOAREA '" + results[i].area + "' 720003TRAIN '" + results[i].train + "'" 
+        log.push(pipe)
+        log.push("HANDLE ANY")
+        log.push("DELETE :Cpipes")
+        log.push("/" + tag + " :DiametersRefFromCpipes /" + results[i].line_reference + "_" + results[i].diameter + " :720001MTOAREA '" + results[i].area + "' 720003TRAIN '" + results[i].train + "'" )
+        log.push("/Cpipes")
+        log.push("ENDHANDLE")
+      }
+      log.push("SAVEWORK")
+      log.push("UNCLAIM ALL")
+      logToText = ""
+      for(let i = 0; i < log.length; i++){
+        logToText += log[i]+"\n"
+      }
+      fs.writeFile("FeedTo3d.mac", logToText, function (err) {
+        if (err) return console.log(err);
+        fs.copyFile('./FeedTo3d.mac', process.env.NODE_FEED_ROUTE, (err) => {
+          if (err) throw err;
+        });
+      });
+
+    }
+    console.log("Generated feed report")
+      
+  })
+}
+
+function downloadStatusIFD(){
+  sql.query("SELECT * FROM estimated_pipes_view", (err, results)=>{
+    if(!results[0]){
+      res.status(200)
+    }else{
+      let log = []
+      let lines = []
+      let status = ""
+      log.push("ONERROR CONTINUE")
+      
+      for(let i = 0; i < results.length;i++){
+        let tag_order = process.env.NODE_TAG_ORDER.replace("sequential", "seq").split(/[ -]+/)   
+        let tag = results[i][tag_order[0]] + "-" + results[i][tag_order[1]] + "-" + results[i][tag_order[2]] + "-" + results[i][tag_order[3]] + "-" + results[i][tag_order[4]] + "-" + results[i][tag_order[5]] + "-" + results[i][tag_order[6]] + "_" + results[i][tag_order[7]]  
+        log.push("/Cpipes")
+        let pipe = "New :Cpipes /" + tag + " :DiametersRefFromCpipes /" + results[i].line_reference + "_" + results[i].diameter + " :720001MTOAREA '" + results[i].area + "' 720003TRAIN '" + results[i].train + "'" 
+        log.push(pipe)
+        log.push("HANDLE ANY")
+        log.push("DELETE :Cpipes")
+        log.push("/" + tag + " :DiametersRefFromCpipes /" + results[i].line_reference + "_" + results[i].diameter + " :720001MTOAREA '" + results[i].area + "' 720003TRAIN '" + results[i].train + "'" )
+        log.push("/Cpipes")
+        log.push("ENDHANDLE")
+      }
+      log.push("SAVEWORK")
+      log.push("UNCLAIM ALL")
+      logToText = ""
+      for(let i = 0; i < log.length; i++){
+        logToText += log[i]+"\n"
+      }
+      fs.writeFile("IFDTo3d.mac", logToText, function (err) {
+        if (err) return console.log(err);
+        fs.copyFile('./IFDTo3d.mac', process.env.NODE_IFD_ROUTE, (err) => {
+          if (err) throw err;
+        });
+      });
+
+    }
+    console.log("Generated IFD report")
+      
+  })
+}
+
 module.exports = {
   upload,
   update,
