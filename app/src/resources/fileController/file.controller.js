@@ -995,8 +995,6 @@ const cancelProc = (req, res) =>{
   sql.query('SELECT `from`,`to`, id, user, role FROM hisoctrls WHERE filename = ? AND role = ? ORDER BY id DESC LIMIT 1', [fileName, "Process"], (err, results) =>{
     if(!results[0]){
       prev = 0
-    }else if(results[0].from == "Accepted Proc"){
-      prev = 2
     }else if(results[0].from == "Denied Proc"){
       prev = 3
     }else{
@@ -1033,8 +1031,6 @@ const cancelInst = (req,res) =>{
   sql.query('SELECT `from` FROM hisoctrls WHERE filename = ? AND role = ? ORDER BY id DESC LIMIT 1', [fileName, "Instrument"], (err, results) =>{
     if(!results[0]){
       prev = 0
-    }else if(results[0].from == "Accepted Inst"){
-      prev = 2
     }else if(results[0].from == "Denied Inst"){
       prev = 3
     }else{
