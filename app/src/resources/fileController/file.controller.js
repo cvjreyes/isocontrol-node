@@ -16,7 +16,8 @@ const upload = async (req, res) => {
   try {
     await uploadFile.uploadFileMiddleware(req, res);
 
-    if (req.file == undefined) {
+    //if (req.file == undefined || req.file.originalname.split('.').length > 2) {
+    if (req.file == undefined ) {
       return res.status(400).send({ message: "Please upload a file!" });
     }
     res.status(200).send({
@@ -388,7 +389,7 @@ const uploadHis = async (req, res) => {
                     }else{
                       progress = results[0].value_ifd
                     }
-                    
+                    console.log("entra para hacer el insert");
                     sql.query("INSERT INTO misoctrls (filename, isoid, revision, claimed, spo, sit, `from`, `to`, comments, user, role, progress, realprogress, max_tray) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", 
                     [req.body.fileName, req.body.fileName.split('.').slice(0, -1).join('.'), 0, 1, 0, 0, " ","Design", "Uploaded", username, "Design", progress, progress, "Design"], (err, results) => {
                       if (err) {
@@ -397,8 +398,7 @@ const uploadHis = async (req, res) => {
                       }else{
                         res.status(200).send("created misoctrls")
                       }
-                    });
-                    
+                    }); 
                   }
                 })
               }
@@ -995,8 +995,6 @@ const cancelProc = (req, res) =>{
   sql.query('SELECT `from`,`to`, id, user, role FROM hisoctrls WHERE filename = ? AND role = ? ORDER BY id DESC LIMIT 1', [fileName, "Process"], (err, results) =>{
     if(!results[0]){
       prev = 0
-    }else if(results[0].from == "Accepted Proc"){
-      prev = 2
     }else if(results[0].from == "Denied Proc"){
       prev = 3
     }else{
@@ -1033,8 +1031,6 @@ const cancelInst = (req,res) =>{
   sql.query('SELECT `from` FROM hisoctrls WHERE filename = ? AND role = ? ORDER BY id DESC LIMIT 1', [fileName, "Instrument"], (err, results) =>{
     if(!results[0]){
       prev = 0
-    }else if(results[0].from == "Accepted Inst"){
-      prev = 2
     }else if(results[0].from == "Denied Inst"){
       prev = 3
     }else{
@@ -1250,8 +1246,9 @@ const checkPipe = async(req,res) =>{
   if(fileName.toString().includes("-CL")){
      fileName = fileName.toString().split('-').slice(0, -1)
   }
+  //sql.query("SELECT * FROM dpipes_view WHERE isoid COLLATE utf8mb4_unicode_ci LIKE ?", [fileName] + '%', (err, results) =>{
   sql.query("SELECT * FROM dpipes_view WHERE isoid COLLATE utf8mb4_unicode_ci = ?", [fileName], (err, results) =>{
-    if(!results[0]){
+      if(!results[0]){
       res.json({
         exists: false
       }).status(200)
@@ -1264,14 +1261,15 @@ const checkPipe = async(req,res) =>{
 }
 
 const checkOwner = async(req,res) =>{
+
   const fileName = req.params.fileName.split('.').slice(0, -1)
-  sql.query("SELECT owner_iso_id FROM dpipes_view LEFT JOIN owners ON dpipes_view.tag = owners.tag WHERE isoid = ?", [fileName], (err, results) =>{
-    console.log(results)
-    if(!results[0].owner_iso_id){
+  sql.query("SELECT COUNT(owner_iso_id) FROM dpipes_view LEFT JOIN owners ON dpipes_view.tag = owners.tag WHERE isoid LIKE ?", [fileName] + '%', (err, results) =>{
+  //sql.query("SELECT COUNT(owner_iso_id) FROM dpipes_view LEFT JOIN owners ON dpipes_view.tag = owners.tag WHERE isoid = ?", [fileName], (err, results) =>{
+    if(results === 0){
       res.json({
         owner: false
       }).status(200)
-    }else{
+    } else {
       res.json({
         owner: true
       }).status(200)
@@ -1898,7 +1896,6 @@ function downloadStatus3DPeriod(){
 }
 
 async function uploadReportPeriod(){
-
   await csv()
   .fromFile(process.env.NODE_DPIPES_ROUTE)
   .then((jsonObj)=>{
