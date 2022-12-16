@@ -5433,6 +5433,8 @@ const getFeedProgress = async(req, res) =>{ //Get del progreso del feed
       for(let i = 0; i < results.length; i++){
         if(results[i].status == "MODELLING(50%)"){ //Si el status es del MODELLED 50% sumamos 50 al progreso
           progress += 50
+        }else if(results[i].status == "TOCHECK(80%)"){ //Si el status es del TO CHECK 50% sumamos 80 al progreso
+          progress += 80
         }else if(results[i].status == "MODELLED(100%)"){ //Si es de MODELLED 100% sumamos 100
           progress += 100
         }
@@ -5459,6 +5461,8 @@ async function saveFeedWeight(){
       for(let i = 0; i < results.length; i++){
         if(results[i].status == "MODELLING(50%)"){
           progress += 50
+        }else if(results[i].status == "TOCHECK(80%)"){
+          progress += 80
         }else if(results[i].status == "MODELLED(100%)"){
           progress += 100
         }
