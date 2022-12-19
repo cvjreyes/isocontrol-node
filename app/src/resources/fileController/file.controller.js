@@ -8563,6 +8563,7 @@ cron.schedule("0 1 * * *", async () => {
 
 async function saveFeedWeight() {
   sql.query("SELECT status FROM feed_pipes", (err, results) => {
+    if (err) console.log(err);
     if (!results[0]) {
       res.send({ progress: 0 });
     } else {
@@ -8580,11 +8581,8 @@ async function saveFeedWeight() {
       sql.query(
         "INSERT INTO gfeed(progress, max_progress) VALUES(?,?)",
         [progress, max_progress],
-        (err, results) => {
-          //Guardamos el progreso en la bd
-          if (err) {
-            console.log(err);
-          }
+        (err) => {
+          if (err) console.log(err);
         }
       );
     }
@@ -8594,7 +8592,7 @@ async function saveFeedWeight() {
 const gFeed = async (req, res) => {
   //Get del progreso del feed para montar la grafica
   sql.query(
-    "SELECT gfeed.*, feed_forecast.estimated FROM gfeed JOIN feed_forecast ON gfeed.id = feed_forecast.`day`",
+    "SELECT gfeed.*, feed_forecast.estimated, feed_forecast.forecast FROM gfeed JOIN feed_forecast ON gfeed.id = feed_forecast.`day`",
     (err, results) => {
       if (!results[0]) {
         res.status(200);
@@ -8621,7 +8619,7 @@ const submitFeedForecast = async (req, res) => {
   const { estimated, forecast } = req.body;
   // Por cada dia del forecast
   Object.keys(estimated).map(function (key, idx) {
-    let dayNum = parseInt(key.substring(1))
+    let dayNum = parseInt(key.substring(1));
     // let forecastSafe = forecast[key] || null
     // console.log(idx, forecast[key], forecastSafe)
     sql.query(
