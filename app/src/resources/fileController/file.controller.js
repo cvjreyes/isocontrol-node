@@ -5856,14 +5856,11 @@ const submitModelledEstimatedPipes = async (req, res) => {
   }
 
   for (let i = 1; i < owners.length; i++) {
-    // console.log("Owners ifc: ", owners[i][0]);
-
     //Por cada nuevo owner asignado
     sql.query(
       "SELECT id FROM users WHERE name = ?",
       owners[i][1],
       async (err, results) => {
-        // console.log("Owners ifc 2: ", owners[i][1]);
         //Cogemos el id del owner
         console.log("Entrada owners: ", owners[i], results);
         if (results.length < 1) {
@@ -5909,6 +5906,14 @@ const submitModelledEstimatedPipes = async (req, res) => {
                   [owners[i][0]],
                   async (err, results) => {
                     // Si ya existe un owner y es distinto al que estamos mandando
+                    console.log("-----------------------------------");
+                    console.log("Results: ", results);
+                    console.log("If result 1: ", !!results[0]);
+                    console.log("If result 2: ", results[0].owner_id != user_id);
+                    console.log("Result 2.1: ", results[0].owner_id);
+                    console.log("Result 2.2: ", user_id);
+                    console.log("-----------------------------------");
+
                     if (results[0] && results[0].owner_id != user_id) {
                       //Actualizamos el owner de la linea
                       await sql.query(
