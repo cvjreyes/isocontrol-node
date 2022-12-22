@@ -5955,24 +5955,120 @@ const submitModelledEstimatedPipes = async (req, res) => {
 //   });
 // };
 
+const deleteFeedPipeRow = async (pipe) => {
+  const { ok } = await withTransaction(
+    async () => await pool.query("DELETE FROM feed_pipes WHERE id = ?", pipe.id)
+  );
+  if (!ok)
+    return res.send({ error: "Something went wrong while deleting pipe" });
+};
+
 const submitFeedPipes = async (req, res) => {
   const { rows } = req.body;
   try {
-    rows.forEach(async (pipe) => {
-      if (pipe["Line reference"] === "deleted") {
-        const response = await withTransaction(async () => {
-          return await pool.query(
-            "DELETE FROM feed_pipes WHERE id = ?",
-            pipe.id
-          );
-        });
-        console.log(response);
+    for (let i = 0; i < rows.length; i++) {
+      console.log(rows[i]);
+      if (rows[i]["Line reference"] === "deleted") {
+        deleteFeedPipeRow(rows[i]);
       }
-    });
+      // * getData ?? => abstraer en función?
+      //Cogemos el ref number de la linea
+      const [linesResponse] = await pool.query(
+        "SELECT refno FROM `lines` WHERE tag = ?",
+        rows[i]["Line reference"]
+      );
+      const { refno } = linesResponse[0];
+      //Cogemos el id del area ( ESTO YA SE PODRÍA MANDAR DESDE EL FRONT )
+      const [areaResponse] = await pool.query(
+        "SELECT id FROM areas WHERE name = ?",
+        rows[i].Area
+      );
+      if (!areaResponse[0]) {
+        return res.send({ error: "Something went wrong" });
+      }
+      const { id: areaId } = areaResponse[0];
+      // * - esto es para añadir owner
+      // let owner_id = null;
+      // if (rows[i].Owner) {
+      //   const [response3] = await pool.query(
+      //     "SELECT id FROM users WHERE name = ?",
+      //     rows[i].Owner
+      //   );
+      //   console.log(response3);
+      //   if (!response3[0]) {
+      //     return res.send({ error: "Something went wrong" });
+      //   }
+      // }
+      // * - esto es para añadir nueva línea
+      // if (!rows[i].Status) {
+      //   //Si la linea no tiene status asignado entonces es nueva, asi que es estimada
+      //   rows[i].Status = "ESTIMATED";
+      // }
+      // Si ya existe el id de la linea
+      // * abstraer en update feed_pipes?
+      //  ?  falta modelled_ifd
+      const { ok: ok1 } = await withTransaction(
+        async () =>
+          await pool.query(
+            "UPDATE feed_pipes SET line_refno = ?, area_id = ?, diameter = ?, train = ?, status = ? WHERE id = ?",
+            [
+              refno,
+              areaId,
+              rows[i].Diameter,
+              rows[i].Train,
+              rows[i].Status,
+              rows[i].id,
+            ]
+          )
+      );
+      if (!ok1)
+        return res.send({ error: "Something went wrong hile updating pipe" });
+      // si está modelada en feed => la buscamos en ifd
+      if (rows[i].Status == "MODELLED(100%)") {
+        // Buscamos el id de la linea del feed en estimated
+        const [estimatedResponse] = await pool.query(
+          "SELECT id FROM estimated_pipes WHERE feed_id = ?",
+          rows[i].id
+        );
+        let estimated_id =
+          estimatedResponse.length > 0 ? estimatedResponse[0].id : null;
+        console.log(estimated_id);
+        // si no existe => la añadimos
+        if (!estimated_id) {
+          const { ok: ok2, result } = await withTransaction(
+            async () =>
+              await pool.query(
+                "INSERT INTO estimated_pipes(line_ref_id, tag, feed_id, unit, area_id, fluid, sequential, spec, diameter, insulation, train) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                [
+                  rows[i].id,
+                  rows[i].Tag,
+                  // ! diferencia entre line_ref_id y feed_id
+                  rows[i].id,
+                  rows[i].Unit,
+                  areaId,
+                  rows[i].Fluid,
+                  rows[i].Seq,
+                  rows[i].Spec,
+                  rows[i].Diameter,
+                  rows[i].Insulation,
+                  rows[i].Train,
+                ]
+              )
+          );
+          if (!ok2)
+            return res.send({
+              error: "Something went wrong while updating pipe",
+            });
+          console.log(result);
+        }
+      }
+      // si está modelada en feed => la buscamos en ifd
+    }
 
     res.send({ success: true });
   } catch (err) {
-    res.send({ error: err });
+    console.error(err);
+    res.send({ error: JSON.stringify(err) });
   }
 };
 
@@ -6084,6 +6180,7 @@ const submitFeedPipes2 = async (req, res) => {
                                               }
                                             );
                                           } else {
+                                            // ! voy por aquí CREO
                                             //Si exista la actualizamos
                                             sql.query(
                                               "UPDATE estimated_pipes SET line_ref_id = ?, tag = ?, unit = ?, area_id = ?, fluid = ?, sequential = ?, spec = ?, diameter = ?, insulation = ?, train = ? WHERE feed_id = ?",

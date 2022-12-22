@@ -7,10 +7,11 @@ async function withTransaction(callback) {
     await conn.beginTransaction();
     let [result] = await callback();
     await conn.commit();
-    return result;
+    return { ok: true, result };
   } catch (error) {
     if (conn) await conn.rollback();
     console.error(error);
+    return { ok: false };
   } finally {
     if (conn) conn.release();
   }
