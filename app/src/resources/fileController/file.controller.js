@@ -2,15 +2,12 @@ const uploadFile = require("../fileMiddleware/file.middleware");
 const uploadBom = require("../fileMiddleware/bom.middleware");
 const fs = require("fs");
 const sql = require("../../db.js");
-var format = require("date-format");
 var cron = require("node-cron");
 const csv = require("csvtojson");
 const readXlsxFile = require("read-excel-file/node");
-const { verify } = require("crypto");
-const { type } = require("os");
-const { resourceLimits } = require("worker_threads");
 const nodemailer = require("nodemailer");
-const { Console } = require("console");
+const { withTransaction } = require("../../helpers/withTransaction");
+const pool = require("../../db2");
 
 const upload = async (req, res) => {
   try {
@@ -5793,7 +5790,7 @@ const submitModelledEstimatedPipes = async (req, res) => {
                   console.log("Area incorrecta");
                 } else {
                   const area_id = results[0].id;
-                  console.log("Diametro inicio: ", new_pipes[i].Diameter)
+                  console.log("Diametro inicio: ", new_pipes[i].Diameter);
 
                   if (new_pipes[i].id) {
                     console.log("Primer if: ", new_pipes[i].Diameter);
@@ -5814,7 +5811,11 @@ const submitModelledEstimatedPipes = async (req, res) => {
                         new_pipes[i].id,
                       ],
                       (err, results) => {
-                        console.log("Diametro antes: ", new_pipes[i].Diameter, results)
+                        console.log(
+                          "Diametro antes: ",
+                          new_pipes[i].Diameter,
+                          results
+                        );
                         if (err) {
                           console.log(err);
                         }
@@ -5822,7 +5823,7 @@ const submitModelledEstimatedPipes = async (req, res) => {
                     );
                   } else {
                     //Si es nueva la creamos como estimada
-                    console.log("Diametro antes: ", new_pipes[i].Diameter)
+                    console.log("Diametro antes: ", new_pipes[i].Diameter);
                     sql.query(
                       "INSERT INTO estimated_pipes(line_ref_id, tag, unit, area_id, fluid, sequential, spec, diameter, insulation, train) VALUES(?,?,?,?,?,?,?,?,?,?)",
                       [
@@ -5838,7 +5839,11 @@ const submitModelledEstimatedPipes = async (req, res) => {
                         new_pipes[i].Train,
                       ],
                       (err, results) => {
-                        console.log("Diametro despues: ", new_pipes[i].Diameter, results)
+                        console.log(
+                          "Diametro despues: ",
+                          new_pipes[i].Diameter,
+                          results
+                        );
 
                         if (err) {
                           console.log(err);
@@ -5909,7 +5914,10 @@ const submitModelledEstimatedPipes = async (req, res) => {
                     console.log("-----------------------------------");
                     console.log("Results: ", results);
                     console.log("If result 1: ", !!results[0]);
-                    console.log("If result 2: ", results[0].owner_id != user_id);
+                    console.log(
+                      "If result 2: ",
+                      results[0].owner_id != user_id
+                    );
                     console.log("Result 2.1: ", results[0].owner_id);
                     console.log("Result 2.2: ", user_id);
                     console.log("-----------------------------------");
@@ -5938,13 +5946,39 @@ const submitModelledEstimatedPipes = async (req, res) => {
   }
 
   res.send({ success: true }).status(200);
-
 };
 
+// ! para que se vea la forma de realizar queries complejas de forma segura
+// const test = async () => {
+//   const response = await withTransaction(async () => {
+//     return await pool.query("select * from users");
+//   });
+// };
+
 const submitFeedPipes = async (req, res) => {
+  const { rows } = req.body;
+  try {
+    rows.forEach(async (pipe) => {
+      if (pipe["Line reference"] === "deleted") {
+        const response = await withTransaction(async () => {
+          return await pool.query(
+            "DELETE FROM feed_pipes WHERE id = ?",
+            pipe.id
+          );
+        });
+        console.log(response);
+      }
+    });
+
+    res.send({ success: true });
+  } catch (err) {
+    res.send({ error: err });
+  }
+};
+
+const submitFeedPipes2 = async (req, res) => {
   //Submit de las lineas del feed
   const new_pipes = req.body.rows;
-  const tag_order = req.body.tag_order;
 
   for (let i = 0; i < new_pipes.length; i++) {
     //Por cada nueva linea del feed
