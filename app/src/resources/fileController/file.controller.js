@@ -6078,6 +6078,39 @@ const submitFeedPipes = async (req, res) => {
                                     }
                                   }
                                 );
+                              } else {
+                                //Si la linea esta completamente modelada
+                                sql.query(
+                                  "SELECT id FROM feed_pipes WHERE line_refno = ?",
+                                  [line_refno],
+                                  (err, results) => {
+                                    //Cogemos el id de la linea del feed
+                                    if (!results[0]) {
+                                      res.status(401);
+                                    } else {
+                                      const feed_id = results[0].id;
+                                      sql.query(
+                                        "SELECT id FROM estimated_pipes WHERE feed_id = ?",
+                                        [feed_id],
+                                        (err, results) => {
+                                          //Comprobamos si la linea modelada en feed ya existe en la tabla de estimadas
+                                          if (results[0]) {
+                                            //Si exista la borramos del IFD
+                                            sql.query(
+                                              "DELETE FROM estimated_pipes WHERE feed_id = ?",
+                                              feed_id,
+                                              (err, results) => {
+                                                if (err) {
+                                                  console.log(err);
+                                                }
+                                              }
+                                            );
+                                          }
+                                        }
+                                      );
+                                    }
+                                  }
+                                );
                               }
                             }
                           }
