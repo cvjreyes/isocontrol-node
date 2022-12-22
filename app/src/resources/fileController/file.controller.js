@@ -527,7 +527,7 @@ const getAttach = (req, res) => {
 const uploadHis = async (req, res) => {
   var username = "";
   sql.query(
-    "SELECT users.* FROM owners LEFT JOIN users ON owner_iso_id = users.id LEFT JOIN dpipes_view ON owners.tag = dpipes_view.tag WHERE isoid = ?",
+    "SELECT users.* FROM owners LEFT JOIN users ON owner_id = users.id LEFT JOIN dpipes_view ON owners.tag = dpipes_view.tag WHERE isoid = ?",
     [req.body.fileName.split(".").slice(0, -1)],
     (err, results) => {
       if (!results[0]) {
@@ -2043,7 +2043,7 @@ const checkPipe = async (req, res) => {
 const checkOwner = async (req, res) => {
   const fileName = req.params.fileName.split(".").slice(0, -1);
   sql.query(
-    "SELECT COUNT(owner_iso_id) FROM dpipes_view LEFT JOIN owners ON dpipes_view.tag = owners.tag WHERE isoid LIKE ?",
+    "SELECT COUNT(owner_id) FROM dpipes_view LEFT JOIN owners ON dpipes_view.tag = owners.tag WHERE isoid LIKE ?",
     [fileName] + "%",
     (err, results) => {
       //sql.query("SELECT COUNT(owner_iso_id) FROM dpipes_view LEFT JOIN owners ON dpipes_view.tag = owners.tag WHERE isoid = ?", [fileName], (err, results) =>{
@@ -5793,7 +5793,10 @@ const submitModelledEstimatedPipes = async (req, res) => {
                   console.log("Area incorrecta");
                 } else {
                   const area_id = results[0].id;
+                  console.log("Diametro inicio: ", new_pipes[i].Diameter)
+
                   if (new_pipes[i].id) {
+                    console.log("Primer if: ", new_pipes[i].Diameter);
                     //Si el id de la linea ya exisita la actualizamos
                     sql.query(
                       "UPDATE estimated_pipes SET line_ref_id = ?, tag = ?, unit = ?, area_id = ?, fluid = ?, sequential = ?, spec = ?, diameter = ?, insulation = ?, train = ? WHERE id = ?",
@@ -5811,6 +5814,7 @@ const submitModelledEstimatedPipes = async (req, res) => {
                         new_pipes[i].id,
                       ],
                       (err, results) => {
+                        console.log("Diametro antes: ", new_pipes[i].Diameter, results)
                         if (err) {
                           console.log(err);
                         }
@@ -5818,6 +5822,7 @@ const submitModelledEstimatedPipes = async (req, res) => {
                     );
                   } else {
                     //Si es nueva la creamos como estimada
+                    console.log("Diametro antes: ", new_pipes[i].Diameter)
                     sql.query(
                       "INSERT INTO estimated_pipes(line_ref_id, tag, unit, area_id, fluid, sequential, spec, diameter, insulation, train) VALUES(?,?,?,?,?,?,?,?,?,?)",
                       [
@@ -5833,6 +5838,8 @@ const submitModelledEstimatedPipes = async (req, res) => {
                         new_pipes[i].Train,
                       ],
                       (err, results) => {
+                        console.log("Diametro despues: ", new_pipes[i].Diameter, results)
+
                         if (err) {
                           console.log(err);
                         }
@@ -5850,113 +5857,78 @@ const submitModelledEstimatedPipes = async (req, res) => {
 
   for (let i = 1; i < owners.length; i++) {
     //Por cada nuevo owner asignado
-    await sql.query(
+    sql.query(
       "SELECT id FROM users WHERE name = ?",
-      owners[i][2],
+      owners[i][1],
       async (err, results) => {
         //Cogemos el id del owner
-        if (!results) {
+        console.log("Entrada owners: ", owners[i], results);
+        if (results.length < 1) {
           //Si no existe el id (se ha borrado el owner)
-          if (owners[i][0] == "IFC") {
-            //El owner ifc no se usa ya
-            await sql.query(
-              "UPDATE owners SET owner_ifc_id = NULL WHERE tag = ?",
-              [owners[i][1]],
-              async (err, results) => {
-                if (err) {
-                  console.log(err);
-                  res.status(401);
-                }
+          sql.query(
+            "UPDATE owners SET owner_id = NULL WHERE tag = ?",
+            [owners[i][0]],
+            async (err, results) => {
+              //Ponemos el owner a null
+              if (err) {
+                console.log(err);
+                res.status(401);
               }
-            );
-          } else {
-            //Este si
-            await sql.query(
-              "UPDATE owners SET owner_iso_id = NULL WHERE tag = ?",
-              [owners[i][1]],
-              async (err, results) => {
-                //Ponemos el owner a null
-                if (err) {
-                  console.log(err);
-                  res.status(401);
-                }
-              }
-            );
-          }
+            }
+          );
         } else {
           //Si existe el id
           const user_id = results[0].id;
-          await sql.query(
+          //Cogemos el id de la tabla owner
+          sql.query(
             "SELECT id FROM owners WHERE tag = ?",
-            owners[i][1],
+            owners[i][0],
             async (err, results) => {
-              //Cogemos el id del owner
-              if (!results[0] && owners[i][1] != owners[i - 1][1]) {
-                //Si la iso no tenia owner asignado
-                if (owners[i][0] == "IFC") {
-                  //Este no se usa
-                  await sql.query(
-                    "INSERT INTO owners(owner_ifc_id, tag) VALUES(?,?)",
-                    [user_id, owners[i][1]],
-                    async (err, results) => {
-                      if (err) {
-                        console.log(err);
-                        res.status(401);
-                      }
+              console.log("Entrado: ", results, owners[i]);
+              // Si la iso no tenia owner asignado
+              if (!results[0]) {
+                console.log("condición cumplida");
+                //Asignamos el owner a la linea
+                sql.query(
+                  "INSERT INTO owners(owner_id, tag, assignation_date) VALUES(?,?,?)",
+                  [user_id, owners[i][0], new Date()],
+                  async (err, results) => {
+                    if (err) {
+                      console.log(err);
+                      res.status(401);
                     }
-                  );
-                } else {
-                  let now = new Date();
-                  //Asignamos el owner a la linea
-                  await sql.query(
-                    "INSERT INTO owners(owner_iso_id, tag, assignation_date) VALUES(?,?,?)",
-                    [user_id, owners[i][1], now],
-                    async (err, results) => {
-                      if (err) {
-                        console.log(err);
-                        res.status(401);
-                      }
-                    }
-                  );
-                }
+                  }
+                );
               } else {
-                //Si ya tenia owner asignado
-                if (owners[i][0] == "IFC") {
-                  await sql.query(
-                    "UPDATE owners SET owner_ifc_id = ? WHERE tag = ?",
-                    [user_id, owners[i][1]],
-                    async (err, results) => {
-                      if (err) {
-                        console.log(err);
-                        res.status(401);
-                      }
-                    }
-                  );
-                } else {
-                  let now = new Date();
-                  await sql.query(
-                    "SELECT owner_iso_id FROM owners WHERE tag = ?",
-                    [owners[i][1]],
-                    async (err, results) => {
-                      //Cogemos la id del nuevo owner
-                      if (results[0]) {
-                        if (results[0].owner_iso_id != user_id) {
-                          //Actualizamos el owner de la linea
-                          await sql.query(
-                            "UPDATE owners SET owner_iso_id = ?, assignation_date = ? WHERE tag = ?",
-                            [user_id, now, owners[i][1]],
-                            async (err, results) => {
-                              if (err) {
-                                console.log(err);
-                                res.status(401);
-                              }
-                            }
-                          );
+                // tenemos owner y tenemos tag => actualizar el owner
+                await sql.query(
+                  "SELECT owner_id FROM owners WHERE tag = ?",
+                  [owners[i][0]],
+                  async (err, results) => {
+                    // Si ya existe un owner y es distinto al que estamos mandando
+                    console.log("-----------------------------------");
+                    console.log("Results: ", results);
+                    console.log("If result 1: ", !!results[0]);
+                    console.log("If result 2: ", results[0].owner_id != user_id);
+                    console.log("Result 2.1: ", results[0].owner_id);
+                    console.log("Result 2.2: ", user_id);
+                    console.log("-----------------------------------");
+
+                    if (results[0] && results[0].owner_id != user_id) {
+                      //Actualizamos el owner de la linea
+                      await sql.query(
+                        "UPDATE owners SET owner_id = ?, assignation_date = ? WHERE tag = ?",
+                        [user_id, new Date(), owners[i][0]],
+                        async (err, results) => {
+                          if (err) {
+                            console.log(err);
+                            res.status(401);
+                          }
                         }
-                      }
+                      );
                     }
-                  );
-                }
+                  }
+                );
               }
             }
           );
@@ -5966,6 +5938,7 @@ const submitModelledEstimatedPipes = async (req, res) => {
   }
 
   res.send({ success: true }).status(200);
+
 };
 
 const submitFeedPipes = async (req, res) => {
@@ -6392,7 +6365,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
         if (!results) {
           if (owners[i][0] == "IFC") {
             await sql.query(
-              "UPDATE owners SET owner_ifc_id = NULL WHERE line_refno = ?",
+              "UPDATE owners SET owner_id = NULL WHERE line_refno = ?",
               [owners[i][1]],
               async (err, results) => {
                 if (err) {
@@ -6403,7 +6376,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
             );
           } else {
             await sql.query(
-              "UPDATE owners SET owner_iso_id = NULL WHERE line_refno = ?",
+              "UPDATE owners SET owner_id = NULL WHERE line_refno = ?",
               [owners[i][1]],
               async (err, results) => {
                 if (err) {
@@ -6422,7 +6395,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
               if (!results[0] && owners[i][1] != owners[i - 1][1]) {
                 if (owners[i][0] == "IFC") {
                   await sql.query(
-                    "INSERT INTO owners(owner_ifc_id, line_refno) VALUES(?,?)",
+                    "INSERT INTO owners(owner_id, line_refno) VALUES(?,?)",
                     [user_id, owners[i][1]],
                     async (err, results) => {
                       if (err) {
@@ -6434,7 +6407,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
                 } else {
                   let now = new Date();
                   await sql.query(
-                    "INSERT INTO owners(owner_iso_id, line_refno, assignation_date) VALUES(?,?,?)",
+                    "INSERT INTO owners(owner_id, line_refno, assignation_date) VALUES(?,?,?)",
                     [user_id, owners[i][1], now],
                     async (err, results) => {
                       if (err) {
@@ -6447,7 +6420,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
               } else {
                 if (owners[i][0] == "IFC") {
                   await sql.query(
-                    "UPDATE owners SET owner_ifc_id = ? WHERE line_refno = ?",
+                    "UPDATE owners SET owner_id = ? WHERE line_refno = ?",
                     [user_id, owners[i][1]],
                     async (err, results) => {
                       if (err) {
@@ -6459,13 +6432,13 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
                 } else {
                   let now = new Date();
                   await sql.query(
-                    "SELECT owner_iso_id FROM owners WHERE tag = ?",
+                    "SELECT owner_id FROM owners WHERE tag = ?",
                     [owners[i][1]],
                     async (err, results) => {
                       if (results[0]) {
-                        if (results[0].owner_iso_id != user_id) {
+                        if (results[0].owner_id != user_id) {
                           await sql.query(
-                            "UPDATE owners SET owner_iso_id = ?, assignation_date = ? WHERE line_refno = ?",
+                            "UPDATE owners SET owner_id = ?, assignation_date = ? WHERE line_refno = ?",
                             [user_id, now, owners[i][1]],
                             async (err, results) => {
                               if (err) {
@@ -7240,7 +7213,7 @@ const submitEstimatedForecastWeight = async (req, res) => {
 const getIsosByUserWeekDesign = async (req, res) => {
   //Get de las isos por semana solo para diseño
   sql.query(
-    "SELECT name, assignation_date FROM owners LEFT JOIN users ON owners.owner_iso_id = users.id ORDER BY name",
+    "SELECT name, assignation_date FROM owners LEFT JOIN users ON owners.owner_id = users.id ORDER BY name",
     (err, results) => {
       //Cogemos los owners
       if (!results[0]) {
@@ -7446,7 +7419,7 @@ const getIsosByUserWeekDesign = async (req, res) => {
 const getWeightByUserWeekDesign = async (req, res) => {
   //Lo mismo que getIsosByUserWeekDesign pero por peso en vez de por unidad
   sql.query(
-    "SELECT users.name, assignation_date, tpipes.weight FROM owners LEFT JOIN users ON owners.owner_iso_id = users.id LEFT JOIN dpipes_view ON owners.tag = dpipes_view.tag JOIN tpipes ON dpipes_view.tpipes_id = tpipes.id ORDER BY name",
+    "SELECT users.name, assignation_date, tpipes.weight FROM owners LEFT JOIN users ON owners.owner_id = users.id LEFT JOIN dpipes_view ON owners.tag = dpipes_view.tag JOIN tpipes ON dpipes_view.tpipes_id = tpipes.id ORDER BY name",
     (err, results) => {
       if (!results[0]) {
         res.send({ user_isos: [] }).status(200);
