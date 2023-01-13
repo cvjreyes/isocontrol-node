@@ -2061,126 +2061,6 @@ const checkOwner = async (req, res) => {
   );
 };
 
-const currentProgress = async (req, res) => {
-  let progress = 0;
-  let realprogress = 0;
-  sql.query(
-    "SELECT SUM(progress) FROM misoctrls WHERE revision = 0 OR (revision = 1 AND issued = 1)",
-    (req, results) => {
-      if (results[0]["SUM(progress)"]) {
-        progress = results[0]["SUM(progress)"];
-      }
-      sql.query(
-        "SELECT SUM(realprogress) FROM misoctrls WHERE requested is null OR requested = 1",
-        (req, results) => {
-          if (results[0]["SUM(realprogress)"]) {
-            realprogress = results[0]["SUM(realprogress)"];
-          }
-          sql.query(
-            "SELECT COUNT(tpipes_id) FROM dpipes WHERE tpipes_id = 1",
-            (err, results) => {
-              const tp1 = results[0]["COUNT(tpipes_id)"];
-              sql.query(
-                "SELECT COUNT(tpipes_id) FROM dpipes WHERE tpipes_id = 2",
-                (err, results) => {
-                  const tp2 = results[0]["COUNT(tpipes_id)"];
-                  sql.query(
-                    "SELECT COUNT(tpipes_id) FROM dpipes WHERE tpipes_id = 3",
-                    (err, results) => {
-                      const tp3 = results[0]["COUNT(tpipes_id)"];
-                      sql.query("SELECT weight FROM tpipes", (err, results) => {
-                        const weights = results;
-                        const maxProgress =
-                          tp1 * results[0].weight +
-                          tp2 * results[1].weight +
-                          tp3 * results[2].weight;
-                        res
-                          .json({
-                            weight: maxProgress,
-                            progress: ((progress / maxProgress) * 100).toFixed(
-                              2
-                            ),
-                            realprogress: (
-                              (realprogress / maxProgress) *
-                              100
-                            ).toFixed(2),
-                          })
-                          .status(200);
-                      });
-                    }
-                  );
-                }
-              );
-            }
-          );
-        }
-      );
-    }
-  );
-};
-
-const currentProgressISO = async (req, res) => {
-  sql.query(
-    "SELECT SUM(progress) FROM misoctrls INNER JOIN dpipes_view ON misoctrls.isoid COLLATE utf8mb4_unicode_ci = dpipes_view.isoid WHERE revision = 0 OR (revision = 1 AND issued = 1)",
-    (req, results) => {
-      const progress = results[0]["SUM(progress)"];
-      sql.query(
-        "SELECT SUM(realprogress) FROM misoctrls INNER JOIN dpipes_view ON misoctrls.isoid COLLATE utf8mb4_unicode_ci = dpipes_view.isoid WHERE requested is null OR requested = 1",
-        (req, results) => {
-          const realprogress = results[0]["SUM(realprogress)"];
-          sql.query(
-            "SELECT COUNT(tpipes_id) FROM dpipes_view INNER JOIN misoctrls ON dpipes_view.isoid COLLATE utf8mb4_unicode_ci = misoctrls.isoid WHERE tpipes_id = 1 AND (revision = 0 OR (revision = 1 AND issued = 1))",
-            (err, results) => {
-              const tp1 = results[0]["COUNT(tpipes_id)"];
-              sql.query(
-                "SELECT COUNT(tpipes_id) FROM dpipes_view INNER JOIN misoctrls ON dpipes_view.isoid COLLATE utf8mb4_unicode_ci = misoctrls.isoid WHERE tpipes_id = 2 AND (revision = 0 OR (revision = 1 AND issued = 1))",
-                (err, results) => {
-                  const tp2 = results[0]["COUNT(tpipes_id)"];
-                  sql.query(
-                    "SELECT COUNT(tpipes_id) FROM dpipes_view INNER JOIN misoctrls ON dpipes_view.isoid COLLATE utf8mb4_unicode_ci = misoctrls.isoid WHERE tpipes_id = 3 AND (revision = 0 OR (revision = 1 AND issued = 1))",
-                    (err, results) => {
-                      const tp3 = results[0]["COUNT(tpipes_id)"];
-                      sql.query("SELECT weight FROM tpipes", (err, results) => {
-                        const weights = results;
-                        const maxProgress =
-                          tp1 * results[0].weight +
-                          tp2 * results[1].weight +
-                          tp3 * results[2].weight;
-                        res
-                          .json({
-                            progressISO: (
-                              (progress / maxProgress) *
-                              100
-                            ).toFixed(2),
-                            realprogressISO: (
-                              (realprogress / maxProgress) *
-                              100
-                            ).toFixed(2),
-                          })
-                          .status(200);
-                      });
-                    }
-                  );
-                }
-              );
-            }
-          );
-        }
-      );
-    }
-  );
-};
-
-const getMaxProgress = async (req, res) => {
-  sql.query("SELECT weight FROM tpipes", (err, results) => {
-    res
-      .json({
-        weights: results,
-      })
-      .status(200);
-  });
-};
-
 const toIssue = async (req, res) => {
   const fileName = req.body.file;
   const transmittal = req.body.transmittal;
@@ -5673,10 +5553,12 @@ const modelledEstimatedPipes = async (req, res) => {
 const feedPipes = async (req, res) => {
   sql.query("SELECT * FROM feed_pipes_view", (err, results) => {
     //Get de las lineas en feed
+    console.log("results: ", results);
     if (err) {
       console.log(err);
       res.status(401);
     } else {
+      // extraer este nonsense
       for (let i = 0; i < results.length; i++) {
         //Por cada linea
         if (results[i].calc_notes == "NA" || results[i].calc_notes == "unset") {
@@ -5867,7 +5749,6 @@ const submitModelledEstimatedPipes = async (req, res) => {
       owners[i][1],
       async (err, results) => {
         //Cogemos el id del owner
-        console.log("Entrada owners: ", owners[i], results);
         if (results.length < 1) {
           //Si no existe el id (se ha borrado el owner)
           sql.query(
@@ -5974,10 +5855,10 @@ const submitFeedPipes = async (req, res) => {
       // * getData ?? => abstraer en función?
       //Cogemos el ref number de la linea
       const [linesResponse] = await pool.query(
-        "SELECT refno FROM `lines` WHERE tag = ?",
+        "SELECT id refno FROM `lines` WHERE tag = ?",
         rows[i]["Line reference"]
       );
-      const { refno } = linesResponse[0];
+      const { id: lineRefId, refno } = linesResponse[0];
       //Cogemos el id del area ( ESTO YA SE PODRÍA MANDAR DESDE EL FRONT )
       const [areaResponse] = await pool.query(
         "SELECT id FROM areas WHERE name = ?",
@@ -6034,13 +5915,14 @@ const submitFeedPipes = async (req, res) => {
           estimatedResponse.length > 0 ? estimatedResponse[0].id : null;
         console.log(estimated_id);
         // si no existe => la añadimos
+        // * abstraer a addEstimatedPipe ?
         if (!estimated_id) {
           const { ok: ok2, result } = await withTransaction(
             async () =>
               await pool.query(
                 "INSERT INTO estimated_pipes(line_ref_id, tag, feed_id, unit, area_id, fluid, sequential, spec, diameter, insulation, train) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
                 [
-                  rows[i].id,
+                  lineRefId,
                   rows[i].Tag,
                   // ! diferencia entre line_ref_id y feed_id
                   rows[i].id,
@@ -6060,9 +5942,35 @@ const submitFeedPipes = async (req, res) => {
               error: "Something went wrong while updating pipe",
             });
           console.log(result);
+        } else {
+          // si existe la actualizamos
+          // * abstraer a updateEestimated
+          const { ok: ok2, result } = await withTransaction(
+            async () =>
+              await pool.query(
+                "UPDATE estimated_pipes SET line_ref_id = ?, tag = ?, unit = ?, area_id = ?, fluid = ?, sequential = ?, spec = ?, diameter = ?, insulation = ?, train = ? WHERE feed_id = ?",
+                [
+                  lineRefId,
+                  rows[i].Tag,
+                  rows[i].Unit,
+                  areaId,
+                  rows[i].Fluid,
+                  rows[i].Seq,
+                  rows[i].Spec,
+                  rows[i].Diameter,
+                  rows[i].Insulation,
+                  rows[i].Train,
+                  rows[i].id,
+                ]
+              )
+          );
+          if (!ok2)
+            return res.send({
+              error: "Something went wrong while updating pipe",
+            });
+          console.log(result);
         }
       }
-      // si está modelada en feed => la buscamos en ifd
     }
 
     res.send({ success: true });
@@ -6180,7 +6088,6 @@ const submitFeedPipes2 = async (req, res) => {
                                               }
                                             );
                                           } else {
-                                            // ! voy por aquí CREO
                                             //Si exista la actualizamos
                                             sql.query(
                                               "UPDATE estimated_pipes SET line_ref_id = ?, tag = ?, unit = ?, area_id = ?, fluid = ?, sequential = ?, spec = ?, diameter = ?, insulation = ?, train = ? WHERE feed_id = ?",
@@ -6210,6 +6117,7 @@ const submitFeedPipes2 = async (req, res) => {
                                   }
                                 );
                               } else {
+                                // ! voy por aquí CREO
                                 //Si la linea esta completamente modelada
                                 sql.query(
                                   "SELECT id FROM feed_pipes WHERE line_refno = ?",
