@@ -368,7 +368,7 @@ const estimatedPipingWeight = async (req, res) => {
     progress = 0;
   //Select del diametro y CN de las lineas
   await sql.query(
-    "SELECT diameter, calc_notes FROM estimated_pipes LEFT JOIN `lines` on estimated_pipes.line_ref_id = `lines`.id",
+    "SELECT diameter, calc_notes FROM ifd_pipes LEFT JOIN `lines` on ifd_pipes.line_refno = `lines`.refno",
     (err, results) => {
       if (results[0]) {
         for (let i = 0; i < results.length; i++) {
@@ -410,7 +410,7 @@ const estimatedPipingWeight = async (req, res) => {
                 }
               }
               sql.query(
-                "SELECT diameter, calc_notes FROM estimated_pipes_view LEFT JOIN `lines` ON estimated_pipes_view.line_reference = `lines`.tag WHERE status COLLATE utf8mb4_unicode_ci = ?",
+                "SELECT diameter, calc_notes FROM ifd_pipes_view LEFT JOIN `lines` ON ifd_pipes_view.line_reference = `lines`.tag WHERE status COLLATE utf8mb4_unicode_ci = ?",
                 ["ESTIMATED"],
                 (err, results) => {
                   if (results[0]) {
