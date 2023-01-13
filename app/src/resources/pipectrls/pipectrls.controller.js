@@ -410,7 +410,7 @@ const estimatedPipingWeight = async (req, res) => {
                 }
               }
               sql.query(
-                "SELECT diameter, calc_notes FROM ifd_pipes_view LEFT JOIN `lines` ON ifd_pipes_view.line_reference = `lines`.tag WHERE status COLLATE utf8mb4_unicode_ci = ?",
+                "SELECT diameter, calc_notes FROM ifd_pipes_view LEFT JOIN `lines` ON ifd_pipes_view.line_reference = `lines`.line_reference WHERE status COLLATE utf8mb4_unicode_ci = ?",
                 ["ESTIMATED"],
                 (err, results) => {
                   if (results[0]) {
@@ -452,7 +452,7 @@ const estimatedPipingCustomWeight = async (req, res) => {
     modelled_weight = 0,
     progress = 0;
   await sql.query(
-    "SELECT diameter, calc_notes FROM estimated_custom_status_pipes LEFT JOIN `lines` on estimated_custom_status_pipes.line_reference = `lines`.tag WHERE estimated_custom_status_pipes.status = ? OR estimated_custom_status_pipes.status = ?",
+    "SELECT diameter, calc_notes FROM estimated_custom_status_pipes LEFT JOIN `lines` on estimated_custom_status_pipes.line_reference = `lines`.line_reference WHERE estimated_custom_status_pipes.status = ? OR estimated_custom_status_pipes.status = ?",
     ["ESTIMATED", "ESTIMATED(F)"],
     (err, results) => {
       if (results[0]) {
@@ -475,7 +475,7 @@ const estimatedPipingCustomWeight = async (req, res) => {
         }
       }
       sql.query(
-        "SELECT diameter, calc_notes FROM estimated_custom_status_pipes LEFT JOIN `lines` on estimated_custom_status_pipes.line_reference = `lines`.tag WHERE estimated_custom_status_pipes.status = ? OR estimated_custom_status_pipes.status = ?",
+        "SELECT diameter, calc_notes FROM estimated_custom_status_pipes LEFT JOIN `lines` on estimated_custom_status_pipes.line_reference = `lines`.line_reference WHERE estimated_custom_status_pipes.status = ? OR estimated_custom_status_pipes.status = ?",
         ["MODELLED", "MODELLED(F)"],
         (err, results) => {
           if (results[0]) {
