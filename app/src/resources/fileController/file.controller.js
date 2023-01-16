@@ -30,7 +30,7 @@ const upload = async (req, res) => {
       }
     }
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).send({
       message: err,
     });
@@ -114,7 +114,7 @@ const update = async (req, res) => {
       message: "Updated the file successfully: " + req.file.originalname,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).send({
       message: err,
     });
@@ -306,7 +306,7 @@ const download = (req, res) => {
                   fileName,
                   (err) => {
                     if (err) {
-                      console.log("error download");
+                      console.error(err);
                       res.status(500).send({
                         message: "Could not download the file. " + err,
                       });
@@ -547,7 +547,7 @@ const uploadHis = async (req, res) => {
           ],
           (err, results) => {
             if (err) {
-              console.log("error: ", err);
+              console.error("error: ", err);
               res.status(401);
             } else {
               if (process.env.NODE_PROGRESS == "1") {
@@ -579,7 +579,6 @@ const uploadHis = async (req, res) => {
                           } else {
                             progress = results[0].value_ifd;
                           }
-                          console.log("entra para hacer el insert");
                           sql.query(
                             "INSERT INTO misoctrls (filename, isoid, revision, claimed, spo, sit, `from`, `to`, comments, user, role, progress, realprogress, max_tray) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                             [
@@ -603,7 +602,7 @@ const uploadHis = async (req, res) => {
                             ],
                             (err, results) => {
                               if (err) {
-                                console.log("error: ", err);
+                                console.error("error: ", err);
                                 res.status(401);
                               } else {
                                 res.status(200).send("created misoctrls");
@@ -634,7 +633,7 @@ const uploadHis = async (req, res) => {
                   ],
                   (err, results) => {
                     if (err) {
-                      console.log("error: ", err);
+                      console.error("error: ", err);
                       res.status(401);
                     } else {
                       res.status(200).send("created misoctrls");
@@ -691,7 +690,7 @@ const updateHis = async (req, res) => {
                 ],
                 (err, results) => {
                   if (err) {
-                    console.log("error: ", err);
+                    console.error("error: ", err);
                     res.send({ success: 1 }).status(200);
                   } else {
                     res.send({ success: 1 }).status(200);
@@ -1136,14 +1135,14 @@ const restore = async (req, res) => {
                 ],
                 (err, results) => {
                   if (err) {
-                    console.log("error: ", err);
+                    console.error("error: ", err);
                   } else {
                     sql.query(
                       "UPDATE misoctrls SET deleted = 0, onhold = 0, `from` = ?, `to` = ?, `comments` = ?, role = ? WHERE filename = ?",
                       [origin, destiny, "Restored", role, fileName],
                       (err, results) => {
                         if (err) {
-                          console.log("error: ", err);
+                          console.error("error: ", err);
                         } else {
                           if (destiny == "LDE/Isocontrol") {
                             destiny = "lde";
@@ -1325,7 +1324,6 @@ const statusFiles = (req, res) => {
       "SELECT * FROM misoctrls LEFT JOIN dpipes_view ON misoctrls.isoid COLLATE utf8mb4_unicode_ci = dpipes_view.isoid JOIN tpipes ON tpipes.id = dpipes_view.tpipes_id",
       (err, results) => {
         if (!results[0]) {
-          console.log("No files found");
           res.status(200).send({
             rows: results,
           });
@@ -1377,7 +1375,6 @@ const statusFiles = (req, res) => {
   } else {
     sql.query("SELECT * FROM misoctrls", (err, results) => {
       if (!results[0]) {
-        console.log("No files found");
         res.status(200).send({
           rows: results,
         });
@@ -1508,14 +1505,14 @@ const toProcess = (req, res) => {
                 ],
                 (err, results) => {
                   if (err) {
-                    console.log("error: ", err);
+                    console.error("error: ", err);
                   } else {
                     sql.query(
                       "UPDATE misoctrls SET spoclaimed = ?, spo = ?, spouser = ? WHERE filename = ?",
                       [spoclaimed, nextProcess, username, fileName],
                       (err, results) => {
                         if (err) {
-                          console.log("error: ", err);
+                          console.error("error: ", err);
                         } else {
                           res.status(200).send("Actualizado proceso");
                         }
@@ -1588,14 +1585,14 @@ const instrument = (req, res) => {
                 ],
                 (err, results) => {
                   if (err) {
-                    console.log("error: ", err);
+                    console.error("error: ", err);
                   } else {
                     sql.query(
                       "UPDATE misoctrls SET sitclaimed = ?, sit = ?, situser = ? WHERE filename = ?",
                       [sitclaimed, nextProcess, username, fileName],
                       (err, results) => {
                         if (err) {
-                          console.log("error: ", err);
+                          console.error("error: ", err);
                         } else {
                           res.status(200).send("Actualizado instrumentacion");
                         }
@@ -1796,7 +1793,7 @@ const uploadProc = async (req, res) => {
           req.file.originalname.split(".").slice(0, -1).join(".") +
           "-PROC.pdf",
         function (err) {
-          if (err) console.log("ERROR: " + err);
+          if (err) console.error("ERROR: " + err);
         }
       );
     } else {
@@ -1807,7 +1804,7 @@ const uploadProc = async (req, res) => {
           req.file.originalname.split(".").slice(0, -1).join(".") +
           "-PROC.pdf",
         function (err) {
-          if (err) console.log("ERROR: " + err);
+          if (err) console.error("ERROR: " + err);
         }
       );
     }
@@ -1850,7 +1847,7 @@ const uploadInst = async (req, res) => {
           req.file.originalname.split(".").slice(0, -1).join(".") +
           "-INST.pdf",
         function (err) {
-          if (err) console.log("ERROR: " + err);
+          if (err) console.error("ERROR: " + err);
         }
       );
     } else {
@@ -1861,7 +1858,7 @@ const uploadInst = async (req, res) => {
           req.file.originalname.split(".").slice(0, -1).join(".") +
           "-INST.pdf",
         function (err) {
-          if (err) console.log("ERROR: " + err);
+          if (err) console.error("ERROR: " + err);
         }
       );
     }
@@ -1882,12 +1879,12 @@ const uploadReport = async (req, res) => {
     diameter_index == -1 ||
     calc_index == -1
   ) {
-    console.log("error", area_index, tag_index, diameter_index, calc_index);
+    console.error("error", area_index, tag_index, diameter_index, calc_index);
     res.status(401).send("Missing columns!");
   } else {
     sql.query("TRUNCATE dpipes", (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       }
     });
     for (let i = 1; i < req.body.length; i++) {
@@ -1914,9 +1911,6 @@ const uploadReport = async (req, res) => {
                 [req.body[i][diameter_index]],
                 (err, results) => {
                   if (!results[0]) {
-                    console.log(
-                      "ivalid diameter: " + req.body[i][diameter_index]
-                    );
                   } else {
                     const diameterid = results[0].id;
                     let calc_notes = 0;
@@ -1949,7 +1943,7 @@ const uploadReport = async (req, res) => {
                       ],
                       (err, results) => {
                         if (err) {
-                          console.log(err);
+                          console.error(err);
                         }
                       }
                     );
@@ -1962,9 +1956,6 @@ const uploadReport = async (req, res) => {
                 [req.body[i][diameter_index]],
                 (err, results) => {
                   if (!results[0]) {
-                    console.log(
-                      "ivalid diameter: " + req.body[i][diameter_index]
-                    );
                   } else {
                     const diameterid = results[0].id;
                     let calc_notes = 0;
@@ -1994,7 +1985,7 @@ const uploadReport = async (req, res) => {
                       ],
                       (err, results) => {
                         if (err) {
-                          console.log(err);
+                          console.error(err);
                         }
                       }
                     );
@@ -2161,7 +2152,6 @@ const toIssue = async (req, res) => {
                         "." +
                         extension,
                       function (err) {
-                        console.log("moved attach to transmittal");
                         if (err) throw err;
                       }
                     );
@@ -2172,7 +2162,6 @@ const toIssue = async (req, res) => {
               if (fs.existsSync(origin_cl_path)) {
                 fs.rename(origin_cl_path, destiny_cl_path, function (err) {
                   if (err) throw err;
-                  console.log("Moved CL to transmittal");
                 });
               }
 
@@ -2218,14 +2207,14 @@ const toIssue = async (req, res) => {
                             ],
                             (err, results) => {
                               if (err) {
-                                console.log("error: ", err);
+                                console.error("error: ", err);
                               } else {
                                 sql.query(
                                   "UPDATE misoctrls SET filename = ?  WHERE filename = ?",
                                   [newFileName, fileName],
                                   (err, results) => {
                                     if (err) {
-                                      console.log("error: ", err);
+                                      console.error("error: ", err);
                                     } else {
                                       if (process.env.NODE_PROGRESS == "0") {
                                         sql.query(
@@ -2240,7 +2229,7 @@ const toIssue = async (req, res) => {
                                           ],
                                           (err, results) => {
                                             if (err) {
-                                              console.log("error: ", err);
+                                              console.error("error: ", err);
                                             } else {
                                               res
                                                 .status(200)
@@ -2298,7 +2287,7 @@ const toIssue = async (req, res) => {
                                                       ],
                                                       (err, results) => {
                                                         if (err) {
-                                                          console.log(
+                                                          console.error(
                                                             "error: ",
                                                             err
                                                           );
@@ -2347,7 +2336,7 @@ const toIssue = async (req, res) => {
                                                                       results
                                                                     ) => {
                                                                       if (err) {
-                                                                        console.log(
+                                                                        console.error(
                                                                           err
                                                                         );
                                                                         res.status(
@@ -2437,7 +2426,7 @@ const request = (req, res) => {
               ],
               (err, results) => {
                 if (err) {
-                  console.log("error: ", err);
+                  console.error("error: ", err);
                 } else {
                   sql.query(
                     "SELECT requested FROM misoctrls WHERE filename = ?",
@@ -2451,7 +2440,7 @@ const request = (req, res) => {
                           [fileName],
                           (err, results) => {
                             if (err) {
-                              console.log("error: ", err);
+                              console.error("error: ", err);
                             } else {
                               res.status(200).send("Requested");
                             }
@@ -2539,7 +2528,7 @@ const newRev = (req, res) => {
                                 ],
                                 (err, results) => {
                                   if (err) {
-                                    console.log("error: ", err);
+                                    console.error("error: ", err);
                                   } else {
                                     sql.query(
                                       "INSERT INTO misoctrls (filename, isoid, revision, spo, sit, `from`, `to`, comments, user, role, progress) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
@@ -2561,7 +2550,7 @@ const newRev = (req, res) => {
                                       ],
                                       (err, results) => {
                                         if (err) {
-                                          console.log("error: ", err);
+                                          console.error("error: ", err);
                                         } else {
                                           sql.query(
                                             "UPDATE misoctrls SET requested = 2 WHERE filename = ?",
@@ -2631,7 +2620,7 @@ const newRev = (req, res) => {
                                             ],
                                             (err, results) => {
                                               if (err) {
-                                                console.log("error: ", err);
+                                                console.error("error: ", err);
                                               } else {
                                                 sql.query(
                                                   "INSERT INTO misoctrls (filename, isoid, revision, spo, sit, `from`, `to`, comments, user, role, progress, realprogress) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -2654,7 +2643,7 @@ const newRev = (req, res) => {
                                                   ],
                                                   (err, results) => {
                                                     if (err) {
-                                                      console.log(
+                                                      console.error(
                                                         "error: ",
                                                         err
                                                       );
@@ -2750,7 +2739,7 @@ const rename = (req, res) => {
                 ],
                 (err, results) => {
                   if (err) {
-                    console.log("error: ", err);
+                    console.error("error: ", err);
                   } else {
                     sql.query(
                       "UPDATE misoctrls SET filename = ?, isoid COLLATE utf8mb4_unicode_ci = ? WHERE filename = ?",
@@ -2855,7 +2844,6 @@ const rename = (req, res) => {
                                       "." +
                                       extension,
                                     function (err) {
-                                      console.log("moved attach " + file);
                                       if (err) throw err;
                                     }
                                   );
@@ -2869,9 +2857,6 @@ const rename = (req, res) => {
                                 destiny_cl_path,
                                 function (err) {
                                   if (err) throw err;
-                                  console.log(
-                                    "Successfully renamed - AKA moved!"
-                                  );
                                 }
                               );
                             }
@@ -2882,9 +2867,6 @@ const rename = (req, res) => {
                                 destiny_proc_path,
                                 function (err) {
                                   if (err) throw err;
-                                  console.log(
-                                    "Successfully renamed - AKA moved!"
-                                  );
                                 }
                               );
                             }
@@ -2895,9 +2877,6 @@ const rename = (req, res) => {
                                 destiny_inst_path,
                                 function (err) {
                                   if (err) throw err;
-                                  console.log(
-                                    "Successfully renamed - AKA moved!"
-                                  );
                                 }
                               );
                             }
@@ -2938,7 +2917,7 @@ const unlockAll = (req, res) => {
     "UPDATE misoctrls JOIN dpipes_view ON misoctrls.isoid COLLATE utf8mb4_unicode_ci = dpipes_view.isoid SET blocked = 0",
     (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
         res.status(401);
       } else {
         res.send({ success: true }).status(200);
@@ -3022,7 +3001,7 @@ function downloadStatus3DPeriod() {
         logToText += log[i] + "\n";
       }
       fs.writeFile("fromIsoTrackerTo3d.mac", logToText, function (err) {
-        if (err) return console.log(err);
+        if (err) return console.error(err);
         fs.copyFile(
           "./fromIsoTrackerTo3d.mac",
           process.env.NODE_STATUS_ROUTE,
@@ -3033,7 +3012,6 @@ function downloadStatus3DPeriod() {
       });
     }
   );
-  console.log("Generated 3d report");
 }
 
 async function uploadReportPeriod() {
@@ -3044,7 +3022,6 @@ async function uploadReportPeriod() {
 
       sql.query("SELECT isoid, tpipes_id FROM dpipes_view", (err, results) => {
         if (!results[0]) {
-          console.log("No existe");
         } else {
           const isoids = results;
           for (let i = 0; i < isoids.length; i++) {
@@ -3053,7 +3030,7 @@ async function uploadReportPeriod() {
               [isoids[i].tpipes_id, isoids[i].isoid],
               (err, results) => {
                 if (err) {
-                  console.log("Error updating");
+                  console.error("Error updating");
                 }
               }
             );
@@ -3063,7 +3040,7 @@ async function uploadReportPeriod() {
 
       sql.query("TRUNCATE dpipes", (err, results) => {
         if (err) {
-          console.log(err);
+          console.error(err);
         }
       });
       for (let i = 0; i < csv.length; i++) {
@@ -3073,7 +3050,7 @@ async function uploadReportPeriod() {
             [csv[i].tag],
             (err, results) => {
               if (err) {
-                console.log("Error updating");
+                console.error("Error updating");
               }
             }
           );
@@ -3141,7 +3118,7 @@ async function uploadReportPeriod() {
                         ],
                         (err, results) => {
                           if (err) {
-                            console.log(err);
+                            console.error(err);
                           }
                           sql.query(
                             "SELECT id FROM pipectrls WHERE tag = ?",
@@ -3161,7 +3138,7 @@ async function uploadReportPeriod() {
                                   [csv[i].tag, initial_state],
                                   (err, results) => {
                                     if (err) {
-                                      console.log(err);
+                                      console.error(err);
                                     }
                                   }
                                 );
@@ -3221,7 +3198,7 @@ async function uploadReportPeriod() {
                         ],
                         (err, results) => {
                           if (err) {
-                            console.log(err);
+                            console.error(err);
                           }
                           sql.query(
                             "SELECT id FROM pipectrls WHERE tag = ?",
@@ -3241,7 +3218,7 @@ async function uploadReportPeriod() {
                                   [csv[i].tag, initial_state],
                                   (err, results) => {
                                     if (err) {
-                                      console.log(err);
+                                      console.error(err);
                                     }
                                   }
                                 );
@@ -3258,7 +3235,7 @@ async function uploadReportPeriod() {
           );
         }
       }
-      console.log("Dpipes updated");
+      console.error("Dpipes updated");
     });
   const timeoutObj = setTimeout(() => {
     refreshProgress();
@@ -3270,7 +3247,6 @@ async function refreshProgress() {
     "SELECT filename, isoid, `to`, before_tpipes_id, issued FROM misoctrls",
     (err, results) => {
       if (!results[0]) {
-        console.log("Empty misoctrls");
       } else {
         const lines = results;
         let type = null;
@@ -3285,7 +3261,7 @@ async function refreshProgress() {
             [lines[i].isoid],
             (err, results) => {
               if (!results[0]) {
-                console.log("No existe en dpipes ", lines[i].isoid);
+                console.error("No existe en dpipes ", lines[i].isoid);
               } else {
                 tl = results[0].tpipes_id;
                 const q =
@@ -3314,7 +3290,6 @@ async function refreshProgress() {
                       [lines[i].filename],
                       (err, results1) => {
                         if (!results1[0]) {
-                          console.log("No existe miso");
                         } else {
                           let progress = results1[0].progress;
                           let max_tray = results1[0].max_tray;
@@ -3338,7 +3313,7 @@ async function refreshProgress() {
                                   ],
                                   (err, results) => {
                                     if (err) {
-                                      console.log("error: ", err);
+                                      console.error("error: ", err);
                                     } else {
                                     }
                                   }
@@ -3358,7 +3333,6 @@ async function refreshProgress() {
       }
     }
   );
-  console.log("updated progress");
 }
 
 const uploadEquisModelledReport = (req, res) => {
@@ -3375,12 +3349,11 @@ const uploadEquisModelledReport = (req, res) => {
     progress_index == -1 ||
     elements_index == -1
   ) {
-    console.log("error", area_index, tag_index, type_index, progress_index);
     res.status(401).send("Missing columns!");
   } else {
     sql.query("TRUNCATE dequis", (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       }
     });
     for (let i = 1; i < req.body.length; i++) {
@@ -3428,7 +3401,7 @@ const uploadEquisModelledReport = (req, res) => {
                           ],
                           (err, results) => {
                             if (err) {
-                              console.log(err);
+                              console.error(err);
                             }
                           }
                         );
@@ -3451,12 +3424,12 @@ const uploadEquisEstimatedReport = (req, res) => {
   const type_index = req.body[0].indexOf("TYPE");
   const qty_index = req.body[0].indexOf("QTY");
   if (area_index == -1 || type_index == -1 || qty_index == -1) {
-    console.log("error", area_index, type_index, qty_index);
+    console.error("error", area_index, type_index, qty_index);
     res.status(401).send("Missing columns!");
   } else {
     sql.query("TRUNCATE eequis", (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       }
     });
     for (let i = 1; i < req.body.length; i++) {
@@ -3488,7 +3461,7 @@ const uploadEquisEstimatedReport = (req, res) => {
                     [areaid, typeid, req.body[i][qty_index]],
                     (err, results) => {
                       if (err) {
-                        console.log(err);
+                        console.error(err);
                       }
                     }
                   );
@@ -3515,12 +3488,12 @@ const uploadInstModelledReport = (req, res) => {
     type_index == -1 ||
     progress_index == -1
   ) {
-    console.log("error", area_index, tag_index, type_index, progress_index);
+    console.error("error", area_index, tag_index, type_index, progress_index);
     res.status(401).send("Missing columns!");
   } else {
     sql.query("TRUNCATE dinsts", (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       }
     });
     for (let i = 1; i < req.body.length; i++) {
@@ -3567,7 +3540,7 @@ const uploadInstModelledReport = (req, res) => {
                           ],
                           (err, results) => {
                             if (err) {
-                              console.log(err);
+                              console.error(err);
                             }
                           }
                         );
@@ -3590,12 +3563,12 @@ const uploadInstEstimatedReport = (req, res) => {
   const type_index = req.body[0].indexOf("TYPE");
   const qty_index = req.body[0].indexOf("QTY");
   if (area_index == -1 || type_index == -1 || qty_index == -1) {
-    console.log("error", area_index, type_index, qty_index);
+    console.error("error", area_index, type_index, qty_index);
     res.status(401).send("Missing columns!");
   } else {
     sql.query("TRUNCATE einsts", (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       }
     });
     for (let i = 1; i < req.body.length; i++) {
@@ -3627,7 +3600,7 @@ const uploadInstEstimatedReport = (req, res) => {
                     [areaid, typeid, req.body[i][qty_index]],
                     (err, results) => {
                       if (err) {
-                        console.log(err);
+                        console.error(err);
                       }
                     }
                   );
@@ -3654,12 +3627,12 @@ const uploadCivModelledReport = (req, res) => {
     type_index == -1 ||
     progress_index == -1
   ) {
-    console.log("error", area_index, tag_index, type_index, progress_index);
+    console.error("error", area_index, tag_index, type_index, progress_index);
     res.status(401).send("Missing columns!");
   } else {
     sql.query("TRUNCATE dcivils", (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       }
     });
     for (let i = 1; i < req.body.length; i++) {
@@ -3706,7 +3679,7 @@ const uploadCivModelledReport = (req, res) => {
                           ],
                           (err, results) => {
                             if (err) {
-                              console.log(err);
+                              console.error(err);
                             }
                           }
                         );
@@ -3729,12 +3702,12 @@ const uploadCivEstimatedReport = (req, res) => {
   const type_index = req.body[0].indexOf("TYPE");
   const qty_index = req.body[0].indexOf("QTY");
   if (area_index == -1 || type_index == -1 || qty_index == -1) {
-    console.log("error", area_index, type_index, qty_index);
+    console.error("error", area_index, type_index, qty_index);
     res.status(401).send("Missing columns!");
   } else {
     sql.query("TRUNCATE ecivils", (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       }
     });
     for (let i = 1; i < req.body.length; i++) {
@@ -3766,7 +3739,7 @@ const uploadCivEstimatedReport = (req, res) => {
                     [areaid, typeid, req.body[i][qty_index]],
                     (err, results) => {
                       if (err) {
-                        console.log(err);
+                        console.error(err);
                       }
                     }
                   );
@@ -3793,12 +3766,12 @@ const uploadElecModelledReport = (req, res) => {
     type_index == -1 ||
     progress_index == -1
   ) {
-    console.log("error", area_index, tag_index, type_index, progress_index);
+    console.error("error", area_index, tag_index, type_index, progress_index);
     res.status(401).send("Missing columns!");
   } else {
     sql.query("TRUNCATE delecs", (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       }
     });
     for (let i = 1; i < req.body.length; i++) {
@@ -3846,7 +3819,7 @@ const uploadElecModelledReport = (req, res) => {
                           ],
                           (err, results) => {
                             if (err) {
-                              console.log(err);
+                              console.error(err);
                             }
                           }
                         );
@@ -3869,12 +3842,12 @@ const uploadElecEstimatedReport = (req, res) => {
   const type_index = req.body[0].indexOf("TYPE");
   const qty_index = req.body[0].indexOf("QTY");
   if (area_index == -1 || type_index == -1 || qty_index == -1) {
-    console.log("error", area_index, type_index, qty_index);
+    console.error("error", area_index, type_index, qty_index);
     res.status(401).send("Missing columns!");
   } else {
     sql.query("TRUNCATE eelecs", (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       }
     });
     for (let i = 1; i < req.body.length; i++) {
@@ -3906,7 +3879,7 @@ const uploadElecEstimatedReport = (req, res) => {
                     [areaid, typeid, req.body[i][qty_index]],
                     (err, results) => {
                       if (err) {
-                        console.log(err);
+                        console.error(err);
                       }
                     }
                   );
@@ -3926,12 +3899,12 @@ const uploadPipesEstimatedReport = (req, res) => {
   const type_index = req.body[0].indexOf("TYPE");
   const qty_index = req.body[0].indexOf("QTY");
   if (area_index == -1 || type_index == -1 || qty_index == -1) {
-    console.log("error", area_index, type_index, qty_index);
+    console.error("error", area_index, type_index, qty_index);
     res.status(401).send("Missing columns!");
   } else {
     sql.query("TRUNCATE epipes", (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       }
     });
     for (let i = 1; i < req.body.length; i++) {
@@ -3963,7 +3936,7 @@ const uploadPipesEstimatedReport = (req, res) => {
                     [areaid, typeid, req.body[i][qty_index]],
                     (err, results) => {
                       if (err) {
-                        console.log(err);
+                        console.error(err);
                       }
                     }
                   );
@@ -4087,13 +4060,13 @@ const updateBom = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 
   readXlsxFile(process.env.NODE_BOM_ROUTE).then((rows) => {
     sql.query("TRUNCATE bomtbl", (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       } else {
         for (let i = 9; i < rows.length; i++) {
           sql.query(
@@ -4108,12 +4081,11 @@ const updateBom = async (req, res) => {
             ],
             (err, results) => {
               if (err) {
-                console.log(err);
+                console.error(err);
               }
             }
           );
         }
-        console.log("Bom updated");
         res.status(200);
       }
     });
@@ -4180,9 +4152,8 @@ async function updateIsocontrolNotModelled() {
     "CREATE TABLE isocontrol_not_modelled AS (SELECT * FROM isocontrol_not_modelled_def_view)",
     (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       } else {
-        console.log("isocontrol not modelled updated");
       }
     }
   );
@@ -4195,9 +4166,8 @@ async function updateIsocontrolModelled() {
     "CREATE TABLE isocontrol_modelled AS ( SELECT * FROM isocontrolfull_view)",
     (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       } else {
-        console.log("isocontrol modelled updated");
       }
     }
   );
@@ -4206,7 +4176,7 @@ async function updateIsocontrolModelled() {
 async function updateLines() {
   sql.query("TRUNCATE `lines`", (err, results) => {
     if (err) {
-      console.log(err);
+      console.error(err);
     }
   });
 
@@ -4236,13 +4206,12 @@ async function updateLines() {
             ],
             (err, results) => {
               if (err) {
-                console.log(err);
+                console.error(err);
               }
             }
           );
         }
       }
-      console.log("Lines updated");
     });
 }
 
@@ -4251,7 +4220,7 @@ const exportModelled = async (req, res) => {
     "SELECT unit, area, line, train, fluid, seq, unit as line_id, unit as iso_id, spec_code, diameter, pid, stress_level, calc_notes, insulation, total_weight FROM isocontrol_modelled",
     (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
         res.status(401);
       } else {
         let rows = results;
@@ -4271,7 +4240,7 @@ const exportNotModelled = async (req, res) => {
     "SELECT bom_unit as unit, area, line, train, bom_unit as line_id, bom_unit as iso_id, spec_code, total_weight, LDL, BOM FROM isocontrol_not_modelled",
     (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
         res.status(401);
       } else {
         let rows = results;
@@ -4279,7 +4248,7 @@ const exportNotModelled = async (req, res) => {
           "SELECT ldl_unit,spec_code_ldl FROM isocontrol_not_modelled",
           (err, results) => {
             if (err) {
-              console.log(err);
+              console.error(err);
               res.status(401);
             } else {
               for (let i = 0; i < rows.length; i++) {
@@ -4347,13 +4316,13 @@ async function updateHolds() {
   const timeoutObj = setTimeout(() => {
     sql.query("TRUNCATE holds", (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       } else {
         sql.query(
           "UPDATE misoctrls SET onhold = 0 WHERE misoctrls.onhold = 1",
           (err, results) => {
             if (err) {
-              console.log(err);
+              console.error(err);
               res.status(401);
             } else {
               for (let i = 0; i < data.length; i++) {
@@ -4396,7 +4365,7 @@ async function updateHolds() {
                     ],
                     (err, results) => {
                       if (err) {
-                        console.log(err);
+                        console.error(err);
                       } else {
                         if (has_holds) {
                           sql.query(
@@ -4404,7 +4373,7 @@ async function updateHolds() {
                             [data[i].tag],
                             (err, results) => {
                               if (err) {
-                                console.log(err);
+                                console.error(err);
                               }
                             }
                           );
@@ -4415,7 +4384,6 @@ async function updateHolds() {
                 }
               }
             }
-            console.log("Holds updated");
           }
         );
       }
@@ -4429,7 +4397,7 @@ async function updateHolds() {
             [results[i].tag],
             (err, results) => {
               if (err) {
-                console.log(err);
+                console.error(err);
               }
             }
           );
@@ -4454,7 +4422,7 @@ const uploadNotifications = (req, res) => {
             [users_ids[j].model_id, n + " new isometric/s uploaded to design."],
             (err, results) => {
               if (err) {
-                console.log(err);
+                console.error(err);
                 res.status(401);
               } else {
               }
@@ -4485,7 +4453,7 @@ const exportFull = async (req, res) => {
     "SELECT unit as line_id, unit, area, unit as line, train, fluid, seq, spec_code, diameter, pid, stress_level, calc_notes, insulation, total_weight, diameter as modelled, tray, progress, isocontrol_holds_view.hold1, BOM, LDL, bom_unit, bom_area, bom_train, bom_spec_code FROM isocontrol_all_view LEFT JOIN isocontrol_holds_view ON isocontrol_all_view.tag COLLATE utf8mb4_unicode_ci = isocontrol_holds_view.tag",
     (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
         res.status(401);
       } else {
         let rows = results;
@@ -4650,7 +4618,7 @@ const submitRevision = async (req, res) => {
     [date, designation, draw, check, appr, fileName],
     (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
         res.status(401);
       } else {
         if (process.env.NODE_ISSUER == "1") {
@@ -4668,7 +4636,7 @@ const submitRevision = async (req, res) => {
                     "-CL.pdf",
                   function (err) {
                     if (err) {
-                      console.log(err);
+                      console.error(err);
                     }
                   }
                 );
@@ -4689,7 +4657,7 @@ function downloadIssuedTo3D() {
     ["Issuer"],
     (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       }
       if (!results[0]) {
         let emptylog = [];
@@ -4704,7 +4672,7 @@ function downloadIssuedTo3D() {
           "IssuerFromIsoTrackerTo3d.mac",
           emptyLogToText,
           function (err) {
-            if (err) return console.log(err);
+            if (err) return console.error(err);
             fs.copyFile(
               "./IssuerFromIsoTrackerTo3d.mac",
               process.env.NODE_ISSUER_ROUTE,
@@ -4785,13 +4753,13 @@ function downloadIssuedTo3D() {
         }
         if (exists) {
           fs.unlink("IssuerFromIsoTrackerTo3d.mac", function (err) {
-            if (err) return console.log(err);
+            if (err) return console.error(err);
           });
           fs.writeFile(
             "IssuerFromIsoTrackerTo3d.mac",
             logToText,
             function (err) {
-              if (err) return console.log(err);
+              if (err) return console.error(err);
               fs.copyFile(
                 "./IssuerFromIsoTrackerTo3d.mac",
                 process.env.NODE_ISSUER_ROUTE,
@@ -4811,13 +4779,13 @@ function downloadIssuedTo3D() {
             emptyLogToText += emptylog[i] + "\n";
           }
           fs.unlink("IssuerFromIsoTrackerTo3d.mac", function (err) {
-            if (err) return console.log(err);
+            if (err) return console.error(err);
           });
           fs.writeFile(
             "IssuerFromIsoTrackerTo3d.mac",
             emptyLogToText,
             function (err) {
-              if (err) return console.log(err);
+              if (err) return console.error(err);
 
               fs.copyFile(
                 "./IssuerFromIsoTrackerTo3d.mac",
@@ -4832,7 +4800,6 @@ function downloadIssuedTo3D() {
       }
     }
   );
-  console.log("Generated issuer report");
 }
 
 const excludeHold = async (req, res) => {
@@ -4842,7 +4809,7 @@ const excludeHold = async (req, res) => {
     [fileName],
     async (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
         res.status(401);
       } else {
         await sql.query(
@@ -4850,7 +4817,7 @@ const excludeHold = async (req, res) => {
           ["On hold", fileName],
           (err, results) => {
             if (err) {
-              console.log(err);
+              console.error(err);
               res.status(401);
             } else {
               res.status(200);
@@ -4870,7 +4837,7 @@ const sendHold = (req, res) => {
     [fileName],
     (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
         res.status(401);
       } else {
         sql.query(
@@ -4878,7 +4845,7 @@ const sendHold = (req, res) => {
           ["On hold", fileName],
           (err, results) => {
             if (err) {
-              console.log(err);
+              console.error(err);
               res.status(401);
             } else {
               res.status(200);
@@ -4923,14 +4890,13 @@ const createByPass = (req, res) => {
                 0,
                 tag.length - (results[0].id + 1).toString().length
               ) + (results[0].id + 1).toString();
-            console.log(tag);
           }
           sql.query(
             "INSERT INTO bypass(misoctrls_id, tbypass_id, tag, note, user_id) VALUES(?,?,?,?,?)",
             [iso_id, type, tag, notes, user_id],
             (err, results) => {
               if (err) {
-                console.log(err);
+                console.error(err);
                 res.status(401);
               } else {
                 var transporter = nodemailer.createTransport({
@@ -4987,10 +4953,7 @@ const createByPass = (req, res) => {
 
                                       html: html_message,
                                     },
-                                    (err, info) => {
-                                      console.log(info.envelope);
-                                      console.log(info.messageId);
-                                    }
+                                    (err, info) => {}
                                   );
                                 }
                               }
@@ -5036,7 +4999,7 @@ const answerByPass = async (req, res) => {
     [type, id],
     (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
         res.status(401);
       } else {
         sql.query(
@@ -5074,10 +5037,7 @@ const answerByPass = async (req, res) => {
 
                 html: html_message,
               },
-              (err, info) => {
-                console.log(info.envelope);
-                console.log(info.messageId);
-              }
+              (err, info) => {}
             );
 
             res.send({ success: true }).status(200);
@@ -5133,10 +5093,7 @@ const rejectByPass = async (req, res) => {
 
                 html: html_message,
               },
-              (err, info) => {
-                console.log(info.envelope);
-                console.log(info.messageId);
-              }
+              (err, info) => {}
             );
 
             res.send({ success: true }).status(200);
@@ -5192,10 +5149,7 @@ const naByPass = async (req, res) => {
 
                 html: html_message,
               },
-              (err, info) => {
-                console.log(info.envelope);
-                console.log(info.messageId);
-              }
+              (err, info) => {}
             );
 
             res.send({ success: true }).status(200);
@@ -5216,7 +5170,7 @@ const editByPass = async (req, res) => {
     [type, notes, iso_id],
     (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
         res.status(401);
       } else {
         res.send({ success: true }).status(200);
@@ -5245,7 +5199,7 @@ const closeByPass = async (req, res) => {
           [closed, iso_id],
           (err, results) => {
             if (err) {
-              console.log(err);
+              console.error(err);
               res.status(401);
             } else {
               res.send({ success: true }).status(200);
@@ -5275,7 +5229,7 @@ const acceptByPass = async (req, res) => {
     [iso_id],
     (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
         res.status(401);
       } else {
         res.send({ success: true }).status(200);
@@ -5386,7 +5340,7 @@ const cancelRev = async (req, res) => {
                                   [isoid, "Design"],
                                   (err, results) => {
                                     if (err) {
-                                      console.log(err);
+                                      console.error(err);
                                       res.status(401);
                                     } else {
                                       sql.query(
@@ -5404,7 +5358,7 @@ const cancelRev = async (req, res) => {
                                             ],
                                             (err, results) => {
                                               if (err) {
-                                                console.log(err);
+                                                console.error(err);
                                               }
                                             }
                                           );
@@ -5415,7 +5369,7 @@ const cancelRev = async (req, res) => {
                                           newRevFilename,
                                         function (err) {
                                           if (err) {
-                                            console.log(err);
+                                            console.error(err);
                                           }
                                         }
                                       );
@@ -5424,7 +5378,7 @@ const cancelRev = async (req, res) => {
                                         [filename],
                                         (err, results) => {
                                           if (err) {
-                                            console.log(err);
+                                            console.error(err);
                                             res.status(401);
                                           } else {
                                             res
@@ -5490,14 +5444,16 @@ const getDiameters = (req, res) => {
 };
 
 const getLineRefs = async (req, res) => {
-  sql.query("SELECT tag as line_ref FROM `lines`", (err, results) => {
-    if (!results[0]) {
-      console.log("no lines");
-      res.json({ line_refs: null }).status(401);
-    } else {
-      res.json({ line_refs: results }).status(200);
+  sql.query(
+    "SELECT line_reference as line_ref FROM `lines`",
+    (err, results) => {
+      if (!results[0]) {
+        res.json({ line_refs: null }).status(401);
+      } else {
+        res.json({ line_refs: results }).status(200);
+      }
     }
-  });
+  );
 };
 
 const getDesigners = async (req, res) => {
@@ -5506,7 +5462,6 @@ const getDesigners = async (req, res) => {
     "SELECT `users`.`name` as name FROM `users` LEFT JOIN model_has_roles ON `users`.id = model_has_roles.model_id  LEFT JOIN roles ON `model_has_roles`.role_id = roles.id WHERE role_id = 1",
     (err, results) => {
       if (!results[0]) {
-        console.log("no lines");
         res.json({ designers: null }).status(401);
       } else {
         res.json({ designers: results }).status(200);
@@ -5516,10 +5471,10 @@ const getDesigners = async (req, res) => {
 };
 
 const modelledEstimatedPipes = async (req, res) => {
-  sql.query("SELECT * FROM estimated_pipes_view", (err, results) => {
+  sql.query("SELECT * FROM ifd_pipes_view", (err, results) => {
     //Get de las lineas estimadas
     if (err) {
-      console.log(err);
+      console.error(err);
       res.status(401);
     } else {
       for (let i = 0; i < results.length; i++) {
@@ -5553,9 +5508,8 @@ const modelledEstimatedPipes = async (req, res) => {
 const feedPipes = async (req, res) => {
   sql.query("SELECT * FROM feed_pipes_view", (err, results) => {
     //Get de las lineas en feed
-    console.log("results: ", results);
     if (err) {
-      console.log(err);
+      console.error(err);
       res.status(401);
     } else {
       // extraer este nonsense
@@ -5594,7 +5548,7 @@ const feedPipes = async (req, res) => {
 const modelledEstimatedCustomPipes = async (req, res) => {
   sql.query("SELECT * FROM estimated_custom_status_pipes", (err, results) => {
     if (err) {
-      console.log(err);
+      console.error(err);
       res.status(401);
     } else {
       for (let i = 0; i < results.length; i++) {
@@ -5623,7 +5577,7 @@ const getDataByRef = async (req, res) => {
   //Get de una linea en funcion del tag
   const ref = req.params.ref;
   sql.query(
-    "SELECT unit, fluid, seq, spec_code, insulation, calc_notes FROM `lines` WHERE tag = ?",
+    "SELECT unit, fluid, seq, spec_code, insulation, calc_notes FROM `lines` WHERE line_reference = ?",
     [ref],
     (err, results) => {
       if (!results[0]) {
@@ -5648,7 +5602,7 @@ const submitModelledEstimatedPipes = async (req, res) => {
         [new_pipes[i].id],
         (err, results) => {
           if (err) {
-            console.log(err);
+            console.error(err);
           }
         }
       );
@@ -5660,7 +5614,6 @@ const submitModelledEstimatedPipes = async (req, res) => {
         (err, results) => {
           //Cogemos el id de la linea
           if (!results[0]) {
-            console.log("Line tag incorrecto");
           } else {
             const line_ref_id = results[0].id;
             sql.query(
@@ -5669,13 +5622,9 @@ const submitModelledEstimatedPipes = async (req, res) => {
               (err, results) => {
                 //Cogemos el id del area
                 if (!results[0]) {
-                  console.log("Area incorrecta");
                 } else {
                   const area_id = results[0].id;
-                  console.log("Diametro inicio: ", new_pipes[i].Diameter);
-
                   if (new_pipes[i].id) {
-                    console.log("Primer if: ", new_pipes[i].Diameter);
                     //Si el id de la linea ya exisita la actualizamos
                     sql.query(
                       "UPDATE estimated_pipes SET line_ref_id = ?, tag = ?, unit = ?, area_id = ?, fluid = ?, sequential = ?, spec = ?, diameter = ?, insulation = ?, train = ? WHERE id = ?",
@@ -5693,19 +5642,13 @@ const submitModelledEstimatedPipes = async (req, res) => {
                         new_pipes[i].id,
                       ],
                       (err, results) => {
-                        console.log(
-                          "Diametro antes: ",
-                          new_pipes[i].Diameter,
-                          results
-                        );
                         if (err) {
-                          console.log(err);
+                          console.error(err);
                         }
                       }
                     );
                   } else {
                     //Si es nueva la creamos como estimada
-                    console.log("Diametro antes: ", new_pipes[i].Diameter);
                     sql.query(
                       "INSERT INTO estimated_pipes(line_ref_id, tag, unit, area_id, fluid, sequential, spec, diameter, insulation, train) VALUES(?,?,?,?,?,?,?,?,?,?)",
                       [
@@ -5721,14 +5664,8 @@ const submitModelledEstimatedPipes = async (req, res) => {
                         new_pipes[i].Train,
                       ],
                       (err, results) => {
-                        console.log(
-                          "Diametro despues: ",
-                          new_pipes[i].Diameter,
-                          results
-                        );
-
                         if (err) {
-                          console.log(err);
+                          console.error(err);
                         }
                       }
                     );
@@ -5757,7 +5694,7 @@ const submitModelledEstimatedPipes = async (req, res) => {
             async (err, results) => {
               //Ponemos el owner a null
               if (err) {
-                console.log(err);
+                console.error(err);
                 res.status(401);
               }
             }
@@ -5770,17 +5707,15 @@ const submitModelledEstimatedPipes = async (req, res) => {
             "SELECT id FROM owners WHERE tag = ?",
             owners[i][0],
             async (err, results) => {
-              console.log("Entrado: ", results, owners[i]);
               // Si la iso no tenia owner asignado
               if (!results[0]) {
-                console.log("condición cumplida");
                 //Asignamos el owner a la linea
                 sql.query(
                   "INSERT INTO owners(owner_id, tag, assignation_date) VALUES(?,?,?)",
                   [user_id, owners[i][0], new Date()],
                   async (err, results) => {
                     if (err) {
-                      console.log(err);
+                      console.error(err);
                       res.status(401);
                     }
                   }
@@ -5792,17 +5727,6 @@ const submitModelledEstimatedPipes = async (req, res) => {
                   [owners[i][0]],
                   async (err, results) => {
                     // Si ya existe un owner y es distinto al que estamos mandando
-                    console.log("-----------------------------------");
-                    console.log("Results: ", results);
-                    console.log("If result 1: ", !!results[0]);
-                    console.log(
-                      "If result 2: ",
-                      results[0].owner_id != user_id
-                    );
-                    console.log("Result 2.1: ", results[0].owner_id);
-                    console.log("Result 2.2: ", user_id);
-                    console.log("-----------------------------------");
-
                     if (results[0] && results[0].owner_id != user_id) {
                       //Actualizamos el owner de la linea
                       await sql.query(
@@ -5810,7 +5734,7 @@ const submitModelledEstimatedPipes = async (req, res) => {
                         [user_id, new Date(), owners[i][0]],
                         async (err, results) => {
                           if (err) {
-                            console.log(err);
+                            console.error(err);
                             res.status(401);
                           }
                         }
@@ -5848,7 +5772,6 @@ const submitFeedPipes = async (req, res) => {
   const { rows } = req.body;
   try {
     for (let i = 0; i < rows.length; i++) {
-      console.log(rows[i]);
       if (rows[i]["Line reference"] === "deleted") {
         deleteFeedPipeRow(rows[i]);
       }
@@ -5875,7 +5798,6 @@ const submitFeedPipes = async (req, res) => {
       //     "SELECT id FROM users WHERE name = ?",
       //     rows[i].Owner
       //   );
-      //   console.log(response3);
       //   if (!response3[0]) {
       //     return res.send({ error: "Something went wrong" });
       //   }
@@ -5913,7 +5835,6 @@ const submitFeedPipes = async (req, res) => {
         );
         let estimated_id =
           estimatedResponse.length > 0 ? estimatedResponse[0].id : null;
-        console.log(estimated_id);
         // si no existe => la añadimos
         // * abstraer a addEstimatedPipe ?
         if (!estimated_id) {
@@ -5941,7 +5862,6 @@ const submitFeedPipes = async (req, res) => {
             return res.send({
               error: "Something went wrong while updating pipe",
             });
-          console.log(result);
         } else {
           // si existe la actualizamos
           // * abstraer a updateEestimated
@@ -5968,7 +5888,6 @@ const submitFeedPipes = async (req, res) => {
             return res.send({
               error: "Something went wrong while updating pipe",
             });
-          console.log(result);
         }
       }
     }
@@ -5993,7 +5912,7 @@ const submitFeedPipes2 = async (req, res) => {
         [new_pipes[i].id],
         (err, results) => {
           if (err) {
-            console.log(err);
+            console.error(err);
           }
         }
       );
@@ -6004,7 +5923,6 @@ const submitFeedPipes2 = async (req, res) => {
         (err, results) => {
           //Cogemos el id y el ref number de la linea
           if (!results[0]) {
-            console.log("Line tag incorrecto");
           } else {
             const line_refno = results[0].refno;
             const line_ref_id = results[0].id;
@@ -6014,7 +5932,6 @@ const submitFeedPipes2 = async (req, res) => {
               async (err, results) => {
                 //Cogemos el id del area
                 if (!results[0]) {
-                  console.log("Area incorrecta");
                 } else {
                   const area_id = results[0].id;
                   await sql.query(
@@ -6046,7 +5963,7 @@ const submitFeedPipes2 = async (req, res) => {
                           ],
                           (err, results) => {
                             if (err) {
-                              console.log(err);
+                              console.error(err);
                             } else {
                               if (new_pipes[i].Status == "MODELLED(100%)") {
                                 //Si la linea esta completamente modelada
@@ -6083,7 +6000,7 @@ const submitFeedPipes2 = async (req, res) => {
                                               ],
                                               (err, results) => {
                                                 if (err) {
-                                                  console.log(err);
+                                                  console.error(err);
                                                 }
                                               }
                                             );
@@ -6106,7 +6023,7 @@ const submitFeedPipes2 = async (req, res) => {
                                               ],
                                               (err, results) => {
                                                 if (err) {
-                                                  console.log(err);
+                                                  console.error(err);
                                                 }
                                               }
                                             );
@@ -6140,7 +6057,7 @@ const submitFeedPipes2 = async (req, res) => {
                                               feed_id,
                                               (err, results) => {
                                                 if (err) {
-                                                  console.log(err);
+                                                  console.error(err);
                                                 }
                                               }
                                             );
@@ -6169,7 +6086,7 @@ const submitFeedPipes2 = async (req, res) => {
                           ],
                           (err, results) => {
                             if (err) {
-                              console.log(err);
+                              console.error(err);
                             } else {
                               if (new_pipes[i].Status == "MODELLED(100%)") {
                                 //Si se crea como modelada
@@ -6206,7 +6123,7 @@ const submitFeedPipes2 = async (req, res) => {
                                               ],
                                               (err, results) => {
                                                 if (err) {
-                                                  console.log(err);
+                                                  console.error(err);
                                                 }
                                               }
                                             );
@@ -6229,7 +6146,7 @@ const submitFeedPipes2 = async (req, res) => {
                                               ],
                                               (err, results) => {
                                                 if (err) {
-                                                  console.log(err);
+                                                  console.error(err);
                                                 }
                                               }
                                             );
@@ -6268,7 +6185,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
         [new_pipes[i].id],
         (err, results) => {
           if (err) {
-            console.log(err);
+            console.error(err);
           }
         }
       );
@@ -6278,7 +6195,6 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
         [new_pipes[i]["Line reference"]],
         (err, results) => {
           if (!results[0]) {
-            console.log("Line tag incorrecto");
           } else {
             const line_refno = results[0].refno;
             sql.query(
@@ -6286,7 +6202,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
               [new_pipes[i].Area],
               (err, results) => {
                 if (!results[0]) {
-                  console.log("Area incorrecta");
+                  console.error("Area incorrecta");
                 } else {
                   const area_id = results[0].id;
                   if (new_pipes[i].id) {
@@ -6301,7 +6217,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
                       ],
                       (err, results) => {
                         if (err) {
-                          console.log(err);
+                          console.error(err);
                         }
                       }
                     );
@@ -6316,7 +6232,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
                       ],
                       (err, results) => {
                         if (err) {
-                          console.log(err);
+                          console.error(err);
                         }
                       }
                     );
@@ -6340,7 +6256,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
                             [new_pipes[i]["Tag"], initial_state],
                             (err, results) => {
                               if (err) {
-                                console.log(err);
+                                console.error(err);
                               }
                             }
                           );
@@ -6357,7 +6273,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
                             [new_pipes[i]["Tag"], 0],
                             (err, results) => {
                               if (err) {
-                                console.log(err);
+                                console.error(err);
                               }
                             }
                           );
@@ -6367,7 +6283,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
                             [0, new_pipes[i]["Tag"]],
                             (err, results) => {
                               if (err) {
-                                console.log(err);
+                                console.error(err);
                               }
                             }
                           );
@@ -6385,7 +6301,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
                             [new_pipes[i]["Tag"]],
                             (err, results) => {
                               if (err) {
-                                console.log(err);
+                                console.error(err);
                               }
                             }
                           );
@@ -6402,7 +6318,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
                             [new_pipes[i]["Tag"], 1],
                             (err, results) => {
                               if (err) {
-                                console.log(err);
+                                console.error(err);
                               }
                             }
                           );
@@ -6412,7 +6328,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
                             [1, new_pipes[i]["Tag"]],
                             (err, results) => {
                               if (err) {
-                                console.log(err);
+                                console.error(err);
                               }
                             }
                           );
@@ -6441,7 +6357,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
               [owners[i][1]],
               async (err, results) => {
                 if (err) {
-                  console.log(err);
+                  console.error(err);
                   res.status(401);
                 }
               }
@@ -6452,7 +6368,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
               [owners[i][1]],
               async (err, results) => {
                 if (err) {
-                  console.log(err);
+                  console.error(err);
                   res.status(401);
                 }
               }
@@ -6471,7 +6387,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
                     [user_id, owners[i][1]],
                     async (err, results) => {
                       if (err) {
-                        console.log(err);
+                        console.error(err);
                         res.status(401);
                       }
                     }
@@ -6483,7 +6399,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
                     [user_id, owners[i][1], now],
                     async (err, results) => {
                       if (err) {
-                        console.log(err);
+                        console.error(err);
                         res.status(401);
                       }
                     }
@@ -6496,7 +6412,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
                     [user_id, owners[i][1]],
                     async (err, results) => {
                       if (err) {
-                        console.log(err);
+                        console.error(err);
                         res.status(401);
                       }
                     }
@@ -6514,7 +6430,7 @@ const submitModelledEstimatedCustomPipes = async (req, res) => {
                             [user_id, now, owners[i][1]],
                             async (err, results) => {
                               if (err) {
-                                console.log(err);
+                                console.error(err);
                                 res.status(401);
                               }
                             }
@@ -6541,7 +6457,7 @@ const modelledEstimatedHolds = async (req, res) => {
     "SELECT estimated_pipes_view.tag , holds.has_holds, holds_isocontrol.`description` FROM estimated_pipes_view LEFT JOIN holds ON estimated_pipes_view.tag = holds.tag LEFT JOIN holds_isocontrol ON estimated_pipes_view.tag = holds_isocontrol.tag GROUP BY estimated_pipes_view.tag",
     (err, results) => {
       if (err) {
-        console.log(err);
+        console.error(err);
         res.status(401);
       } else {
         res.json({ rows: results }).status(200);
@@ -6593,7 +6509,7 @@ const submitHoldsIso = async (req, res) => {
         [holds[i].id],
         (err, results) => {
           if (err) {
-            console.log(err);
+            console.error(err);
             res.status(401);
           }
         }
@@ -6605,7 +6521,7 @@ const submitHoldsIso = async (req, res) => {
         [tag, holds[i].description],
         (err, results) => {
           if (err) {
-            console.log(err);
+            console.error(err);
             res.status(401);
           }
         }
@@ -6617,7 +6533,7 @@ const submitHoldsIso = async (req, res) => {
         [holds[i].description, holds[i].id],
         (err, results) => {
           if (err) {
-            console.log(err);
+            console.error(err);
             res.status(401);
           }
         }
@@ -6759,7 +6675,7 @@ const submitProjectSpan = async (req, res) => {
     (err, results) => {
       //Actualizamos el span
       if (err) {
-        console.log(err);
+        console.error(err);
         res.send({ success: false }).status(401);
       } else {
         const weeks =
@@ -6780,7 +6696,7 @@ const submitProjectSpan = async (req, res) => {
                 (err, results) => {
                   //Eliminamos las semanas sobrantes de la tabla de estimacion
                   if (err) {
-                    console.log(err);
+                    console.error(err);
                     res.send({ success: false }).status(401);
                   }
                 }
@@ -6791,7 +6707,7 @@ const submitProjectSpan = async (req, res) => {
                 (err, results) => {
                   //Eliminamos las semanas sobrantes de la tabla de forecast
                   if (err) {
-                    console.log(err);
+                    console.error(err);
                     res.send({ success: false }).status(401);
                   }
                 }
@@ -6802,7 +6718,7 @@ const submitProjectSpan = async (req, res) => {
                 (err, results) => {
                   //Eliminamos las semanas sobrantes de la tabla de estimacion para ifd
                   if (err) {
-                    console.log(err);
+                    console.error(err);
                     res.send({ success: false }).status(401);
                   }
                 }
@@ -6813,7 +6729,7 @@ const submitProjectSpan = async (req, res) => {
                 (err, results) => {
                   //Eliminamos las semanas sobrantes de la tabla del forecast para ifd
                   if (err) {
-                    console.log(err);
+                    console.error(err);
                     res.send({ success: false }).status(401);
                   }
                 }
@@ -6844,7 +6760,7 @@ const submitProjectSpan = async (req, res) => {
                         (err, results) => {
                           //Insert de las nuevas semanas en estimadas
                           if (err) {
-                            console.log(err);
+                            console.error(err);
                           }
                         }
                       );
@@ -6854,7 +6770,7 @@ const submitProjectSpan = async (req, res) => {
                         (err, results) => {
                           //Insert de las nuevas semanas en forecast
                           if (err) {
-                            console.log(err);
+                            console.error(err);
                           }
                         }
                       );
@@ -6865,7 +6781,7 @@ const submitProjectSpan = async (req, res) => {
                       (err, results) => {
                         //Insert de las nuevas semanas en estimadas para ifd
                         if (err) {
-                          console.log(err);
+                          console.error(err);
                         }
                       }
                     );
@@ -6875,7 +6791,7 @@ const submitProjectSpan = async (req, res) => {
                       (err, results) => {
                         //Insert de las nuevas semanas en estimadas para ifd
                         if (err) {
-                          console.log(err);
+                          console.error(err);
                         }
                       }
                     );
@@ -6904,7 +6820,7 @@ const submitProjectSpan = async (req, res) => {
                     (err, results) => {
                       //Eliminamos las semanas sobrantes
                       if (err) {
-                        console.log(err);
+                        console.error(err);
                         res.send({ success: false }).status(401);
                       }
                     }
@@ -6922,7 +6838,7 @@ const submitProjectSpan = async (req, res) => {
                       (err, results) => {
                         //Creamos las semanas nuevas
                         if (err) {
-                          console.log(err);
+                          console.error(err);
                         }
                       }
                     );
@@ -6955,7 +6871,7 @@ const submitPipingClass = async (req, res) => {
         [pipingClass[i]["id"]],
         (err, results) => {
           if (err) {
-            console.log(err);
+            console.error(err);
             res.status(401);
           }
         }
@@ -6982,7 +6898,7 @@ const submitPipingClass = async (req, res) => {
                     [pipingClass[i]["PipingClass"], material_id],
                     (err, results) => {
                       if (err) {
-                        console.log(err);
+                        console.error(err);
                       }
                     }
                   );
@@ -6993,7 +6909,7 @@ const submitPipingClass = async (req, res) => {
                     [pipingClass[i]["PipingClass"], material_id, results[0].id],
                     (err, results) => {
                       if (err) {
-                        console.log(err);
+                        console.error(err);
                       }
                     }
                   );
@@ -7019,7 +6935,7 @@ const submitMaterials = async (req, res) => {
         [materials[i]["id"]],
         (err, results) => {
           if (err) {
-            console.log(err);
+            console.error(err);
             res.status(401);
           }
         }
@@ -7038,7 +6954,7 @@ const submitMaterials = async (req, res) => {
               async (err, results) => {
                 //Lo creamos
                 if (err) {
-                  console.log(err);
+                  console.error(err);
                 } else {
                   await sql.query(
                     "SELECT id FROM materials WHERE name = ?",
@@ -7070,7 +6986,7 @@ const submitMaterials = async (req, res) => {
                                 (err, results) => {
                                   //Añadimos la estimacion para cada semana del nuevo material
                                   if (err) {
-                                    console.log(err);
+                                    console.error(err);
                                   }
                                 }
                               );
@@ -7080,7 +6996,7 @@ const submitMaterials = async (req, res) => {
                                 (err, results) => {
                                   //Añadimos el forecast para cada semana del nuevo material
                                   if (err) {
-                                    console.log(err);
+                                    console.error(err);
                                   }
                                 }
                               );
@@ -7100,7 +7016,7 @@ const submitMaterials = async (req, res) => {
               [materials[i]["Material"], materials[i]["id"]],
               (err, results) => {
                 if (err) {
-                  console.log(err);
+                  console.error(err);
                 }
               }
             );
@@ -7126,7 +7042,7 @@ const submitEstimatedForecast = async (req, res) => {
       (err, results) => {
         //Actualizamos los valores de estimacion para cada semana del material
         if (err) {
-          console.log(err);
+          console.error(err);
         }
       }
     );
@@ -7139,7 +7055,7 @@ const submitEstimatedForecast = async (req, res) => {
       (err, results) => {
         //Actualizamos los valores de forecast para cada semana del material
         if (err) {
-          console.log(err);
+          console.error(err);
         }
       }
     );
@@ -7273,7 +7189,7 @@ const submitEstimatedForecastWeight = async (req, res) => {
       [estimated[key], forecast[key], key],
       (err, results) => {
         if (err) {
-          console.log(err);
+          console.error(err);
         }
       }
     );
@@ -8608,7 +8524,7 @@ cron.schedule("0 1 * * *", async () => {
 
 async function saveFeedWeight() {
   sql.query("SELECT status FROM feed_pipes", (err, results) => {
-    if (err) console.log(err);
+    if (err) console.error(err);
     if (!results[0]) {
       res.send({ progress: 0 });
     } else {
@@ -8627,7 +8543,7 @@ async function saveFeedWeight() {
         "INSERT INTO gfeed(progress, max_progress) VALUES(?,?)",
         [progress, max_progress],
         (err) => {
-          if (err) console.log(err);
+          if (err) console.error(err);
         }
       );
     }
@@ -8666,7 +8582,6 @@ const submitFeedForecast = async (req, res) => {
   Object.keys(estimated).map(function (key, idx) {
     let dayNum = parseInt(key.substring(1));
     // let forecastSafe = forecast[key] || null
-    // console.log(idx, forecast[key], forecastSafe)
     sql.query(
       "SELECT * FROM feed_forecast WHERE day = ?",
       [dayNum],
@@ -8679,7 +8594,7 @@ const submitFeedForecast = async (req, res) => {
             [dayNum, estimated[key], forecast[key]],
             (err) => {
               if (err) {
-                console.log(err);
+                console.error(err);
               }
             }
           );
@@ -8690,7 +8605,7 @@ const submitFeedForecast = async (req, res) => {
             [estimated[key], forecast[key], dayNum],
             (err) => {
               if (err) {
-                console.log(err);
+                console.error(err);
               }
             }
           );
@@ -8775,13 +8690,12 @@ function downloadStatusFeed() {
         logToText += log[i] + "\n";
       }
       fs.writeFile("FeedTo3d.mac", logToText, function (err) {
-        if (err) return console.log(err);
+        if (err) return console.error(err);
         fs.copyFile("./FeedTo3d.mac", process.env.NODE_FEED_ROUTE, (err) => {
           if (err) throw err;
         });
       });
     }
-    console.log("Generated feed report");
   });
 }
 
@@ -8855,13 +8769,12 @@ function downloadStatusIFD() {
         logToText += log[i] + "\n";
       }
       fs.writeFile("IFDTo3d.mac", logToText, function (err) {
-        if (err) return console.log(err);
+        if (err) return console.error(err);
         fs.copyFile("./IFDTo3d.mac", process.env.NODE_IFD_ROUTE, (err) => {
           if (err) throw err;
         });
       });
     }
-    console.log("Generated IFD report");
   });
 }
 
